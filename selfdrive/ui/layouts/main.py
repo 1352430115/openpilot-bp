@@ -15,6 +15,7 @@ SIDEBAR_WIDTH = BPConstants.SIDEBAR_WIDTH  # noqa: F811
 from bluepilot.ui.layouts.home_bp import HomeLayoutBP as HomeLayout  # noqa: F811
 from openpilot.selfdrive.ui.bp.onroad.augmented_road_view_bp import AugmentedRoadViewBP as AugmentedRoadView  # noqa: F811
 from bluepilot.ui.widgets.debug import ControlsDebugPanel
+from openpilot.selfdrive.ui.bp.lib.onroad_display import OnroadDisplayState
 # BluePilot: END - BP sidebar, home layout, and onroad overlays
 from openpilot.selfdrive.ui.ui_state import device, ui_state
 from openpilot.system.ui.widgets import Widget
@@ -92,11 +93,20 @@ class MainLayout(Widget):
 
       self._set_mode_for_state()
 
+  def _default_onroad_display_mode(self) -> bool:
+    """BluePilot: True when map tiles are ready for the current position."""
+    onroad = self._layouts[MainState.ONROAD]
+    renderer = getattr(onroad, "_amap_renderer", None)
+    return renderer.tiles_ready() if renderer is not None else False
+
+  def _apply_onroad_display_default(self) -> None:
+    """BluePilot: Idle/onroad entry — map mode when tiles are ready, else full screen."""
+    OnroadDisplayState.reset_to_default(self._default_onroad_display_mode())
+    self._sidebar.set_visible(OnroadDisplayState.show_sidebar())
+
   def _set_mode_for_state(self):
     if ui_state.started:
-      # Don't hide sidebar from interactive timeout
-      if self._current_mode != MainState.ONROAD:
-        self._sidebar.set_visible(False)
+      self._apply_onroad_display_default()
       self._set_current_layout(MainState.ONROAD)
     else:
       self._set_current_layout(MainState.HOME)
@@ -127,7 +137,9 @@ class MainLayout(Widget):
     # from the debug panel's tab bar to the onroad view underneath.
     if self._debug_toggled_this_frame or self._debug_panel.is_panel_visible:
       return
-    self._sidebar.set_visible(not self._sidebar.is_visible)
+    # BluePilot: Cycle full-screen → map overlay → sidebar menu
+    OnroadDisplayState.cycle()
+    self._sidebar.set_visible(OnroadDisplayState.show_sidebar())
 
   def _on_debug_clicked(self):
     """BluePilot: Toggle the onroad debug panel from the sidebar debug button."""

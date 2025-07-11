@@ -14,6 +14,7 @@ from openpilot.selfdrive.ui.bp.onroad.hybrid_battery_gauge_arched import HybridB
 from openpilot.selfdrive.ui.bp.onroad.power_flow_gauge import PowerFlowGauge
 from openpilot.selfdrive.ui.bp.onroad.powerflow_gauge_arched import PowerflowGaugeArched, POWERFLOW_ANGLE_SPAN
 from openpilot.selfdrive.ui.bp.onroad.torque_bar_renderer_bp import TorqueBarRendererBP
+from openpilot.selfdrive.ui.bp.onroad.amap_renderer_bp import AmapRendererBP
 from openpilot.selfdrive.ui.bp.mici.onroad.confidence_ball_bp import ConfidenceBallTiciBP
 from openpilot.selfdrive.ui.onroad.driver_state import BTN_SIZE
 from openpilot.selfdrive.ui.sunnypilot.onroad.developer_ui import DeveloperUiState, get_bottom_dev_ui_offset
@@ -71,6 +72,14 @@ class AugmentedRoadViewBP(AugmentedRoadView, BlindspotRendererMixin):
     if self._hybrid_gauge_style not in ("flat", "arched"):
       self._hybrid_gauge_style = "flat"
 
+    # BluePilot: Gaode map overlay (bottom third, perspective, night mode)
+    self._amap_renderer = AmapRendererBP()
+
+  def close(self):
+    if hasattr(self, "_amap_renderer"):
+      self._amap_renderer.close()
+    super().close()
+
   def update_fade_out_bottom_overlay(self, _content_rect):
     """BluePilot: Skip MICI fade overlay on TICI — causes unwanted black gradient at bottom."""
     pass
@@ -95,6 +104,9 @@ class AugmentedRoadViewBP(AugmentedRoadView, BlindspotRendererMixin):
 
     self._switch_stream_if_needed(ui_state.sm)
     self._update_calibration()
+
+    # BluePilot: Prefetch Amap tiles every frame so idle default can use tile readiness
+    self._amap_renderer.update()
 
     # Create inner content area with border padding
     self._content_rect = rl.Rectangle(
@@ -128,6 +140,10 @@ class AugmentedRoadViewBP(AugmentedRoadView, BlindspotRendererMixin):
 
     # Render model (uses full content rect for camera-space overlays)
     self.model_renderer.render(self._content_rect)
+
+    # BluePilot: Gaode map overlay when map display mode is active
+    if self._amap_renderer.should_render():
+      self._amap_renderer.render(self._content_rect)
 
     # SP fade overlay
     self.update_fade_out_bottom_overlay(self._content_rect)

@@ -491,6 +491,15 @@
       "flags": ["PERSISTENT", "BACKUP"],
       "create_default": false,
       "enabled": true
+    },
+    {
+      "name": "BPAmapWebKey",
+      "default": "",
+      "type": "string",
+      "flags": ["PERSISTENT", "BACKUP"],
+      "create_default": false,
+      "enabled": true,
+      "description": "Gaode (Amap) Web Service API key for onroad map overlay"
     }
   ]
 }

@@ -3364,3 +3364,15 @@ msgstr "偵測到裝置重新安裝：正在重新校準"
 msgid "Calibration Invalid: Remount Device & Recalibrate"
 msgstr "校準無效：請重新安裝裝置並校準"
 
+#: openpilot/selfdrive/ui/bp/layouts/settings/osm_bp.py
+msgid "Amap Web Service Key"
+msgstr "高德 Web 服務密鑰"
+
+#: openpilot/selfdrive/ui/bp/layouts/settings/osm_bp.py
+msgid "Enter your Amap Web Service API key"
+msgstr "輸入高德 Web 服務 API 密鑰"
+
+#: openpilot/selfdrive/ui/bp/layouts/settings/osm_bp.py
+msgid "Not set"
+msgstr "未設定"
+

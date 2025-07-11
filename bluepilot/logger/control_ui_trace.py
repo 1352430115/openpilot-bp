@@ -10,6 +10,9 @@ from typing import Any
 
 from openpilot.common.swaglog import cloudlog
 
+# Lateral/longitudinal control trace logging. Set True when actively debugging.
+_CONTROL_TRACE_ENABLED = False
+
 MADS_STATE_NAMES = {
   0: "disabled",
   1: "enabled",
@@ -20,6 +23,8 @@ MADS_STATE_NAMES = {
 
 
 def _event(name: str, **kwargs: Any) -> None:
+  if not _CONTROL_TRACE_ENABLED:
+    return
   cloudlog.event(f"bp_control_trace.{name}", **kwargs)
 
 

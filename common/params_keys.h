@@ -314,6 +314,9 @@ inline static std::unordered_map<std::string, ParamKeyAttributes> keys = {
     {"Blindspot", {PERSISTENT | BACKUP, BOOL, "0"}},
     {"BlinkerPauseLaneChange", {PERSISTENT | BACKUP, BOOL, "0"}},
 
+    // BluePilot: Gaode (Amap) Web Service key for onroad map overlay
+    {"BPAmapWebKey", {PERSISTENT | BACKUP, STRING, ""}},
+
     // BluePilot: Portal (Web Routes Server)
     {"EnableWebRoutesServer", {PERSISTENT | BACKUP, BOOL, "0"}},
     {"BPPortalPort", {PERSISTENT | BACKUP, INT, "8088"}},

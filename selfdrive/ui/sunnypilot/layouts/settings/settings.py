@@ -17,7 +17,10 @@ from openpilot.selfdrive.ui.sunnypilot.layouts.settings.device import DeviceLayo
 from openpilot.selfdrive.ui.sunnypilot.layouts.settings.display import DisplayLayout
 from openpilot.selfdrive.ui.sunnypilot.layouts.settings.models import ModelsLayout
 from openpilot.selfdrive.ui.sunnypilot.layouts.settings.network import NetworkUISP
-from openpilot.selfdrive.ui.sunnypilot.layouts.settings.osm import OSMLayout
+from openpilot.selfdrive.ui.sunnypilot.layouts.settings.osm import OSMLayout  # noqa: F401
+# BluePilot: OSM layout with Gaode Web Service key input
+from openpilot.selfdrive.ui.bp.layouts.settings.osm_bp import OSMLayoutBP as OSMLayout
+# End BluePilot
 from openpilot.selfdrive.ui.sunnypilot.layouts.settings.software import SoftwareLayoutSP
 from openpilot.selfdrive.ui.sunnypilot.layouts.settings.steering import SteeringLayout
 from openpilot.selfdrive.ui.sunnypilot.layouts.settings.sunnylink import SunnylinkLayout

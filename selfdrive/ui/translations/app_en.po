@@ -3291,3 +3291,15 @@ msgstr "✓ SUBSCRIBED"
 msgid "🔥 Firehose Mode 🔥"
 msgstr "🔥 Firehose Mode 🔥"
 
+#: openpilot/selfdrive/ui/bp/layouts/settings/osm_bp.py
+msgid "Amap Web Service Key"
+msgstr "Amap Web Service Key"
+
+#: openpilot/selfdrive/ui/bp/layouts/settings/osm_bp.py
+msgid "Enter your Amap Web Service API key"
+msgstr "Enter your Amap Web Service API key"
+
+#: openpilot/selfdrive/ui/bp/layouts/settings/osm_bp.py
+msgid "Not set"
+msgstr "Not set"
+
