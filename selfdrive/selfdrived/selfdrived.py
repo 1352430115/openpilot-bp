@@ -231,6 +231,13 @@ class SelfdriveD(CruiseHelper):
       car_events_sp = self.car_events_sp.update(CS, self.events).to_msg()
       self.events_sp.add_from_msg(car_events_sp)
 
+      # BluePilot: Ford — LKA off while engaged cancels ACC: disengage OP longitudinal (lat via lkasDisable in MADS)
+      if self.CP.brand == 'ford' and any(
+          be.type == car.CarState.ButtonEvent.Type.lkas and be.pressed for be in CS.buttonEvents):
+        if self.mads.enabled or self.enabled:
+          self.events.add(EventName.pcmDisable)
+      # End BluePilot
+
       if self.CP.notCar:
         # wait for everything to init first
         if self.sm.frame > int(5. / DT_CTRL) and self.initialized:

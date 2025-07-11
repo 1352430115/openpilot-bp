@@ -344,7 +344,10 @@ class DriverMonitoring:
       self._reset_awareness()
       return
 
-    driver_attentive = self.driver_distraction_filter.x < 0.37
+    # BluePilot: optional relaxed DM filter thresholds via settings attrs
+    _attentive_thresh = getattr(self.settings, '_ATTENTIVE_FILTER_THRESHOLD', 0.37)
+    driver_attentive = self.driver_distraction_filter.x < _attentive_thresh
+    # End BluePilot
     awareness_prev = self.awareness
 
     if (driver_attentive and self.face_detected and self.pose.low_std and self.awareness > 0):
@@ -366,7 +369,10 @@ class DriverMonitoring:
     always_on_red_exemption = always_on_valid and not op_engaged and _reaching_terminal
     always_on_lowspeed_exemption = always_on_valid and not op_engaged and car_speed < self.settings._ALWAYS_ON_ALERT_MIN_SPEED
 
-    certainly_distracted = self.driver_distraction_filter.x > 0.63 and self.driver_distracted and self.face_detected
+    # BluePilot: optional relaxed DM filter thresholds via settings attrs
+    _distracted_thresh = getattr(self.settings, '_DISTRACTED_FILTER_THRESHOLD', 0.63)
+    certainly_distracted = self.driver_distraction_filter.x > _distracted_thresh and self.driver_distracted and self.face_detected
+    # End BluePilot
     maybe_distracted = self.hi_stds > self.settings._HI_STD_FALLBACK_TIME or not self.face_detected
 
     if certainly_distracted or maybe_distracted:

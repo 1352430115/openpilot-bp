@@ -49,6 +49,8 @@ class CarState(CarStateBase, MadsCarState, CarStateExt):
     self.hev_data_available = CP.flags & FordFlags.HEV_CLUSTER_DATA
     self.steer_driver_allowance_nm = self._read_steer_driver_allowance_nm()
     self.steer_pressed_min_count = self._read_steer_pressed_min_count()
+    # BluePilot: hold last good gear for ALT_STEER_ANGLE glitch filtering (MADS pause / gray border)
+    self._bp_prev_gear_shifter = GearShifter.unknown
 
   def _read_steer_driver_allowance_nm(self) -> float:
     """Nm threshold before steeringPressed; lower = more false overrides when hands-off."""
@@ -160,11 +162,20 @@ class CarState(CarStateBase, MadsCarState, CarStateExt):
       if self.CP.flags & FordFlags.CANFD:
         gear = self.shifter_values.get(cp.vl["Gear_Shift_by_Wire_FD1"]["TrnRng_D_RqGsm"])
       elif self.CP.flags & FordFlags.ALT_STEER_ANGLE:
-          gear = self.shifter_values.get(cp.vl["TransGearData"]["GearLvrPos_D_Actl"])
+        gear = self.shifter_values.get(cp.vl["TransGearData"]["GearLvrPos_D_Actl"])
+        # BluePilot: Edge/Fusion Retrofit — Sport gate and transient faults map to Drive for MADS
+        if gear in ("Sport_DriveSport", "Sport_DriveSport_Mposition"):
+          gear = "Drive"
+        elif gear in (
+          "Unknown_Position", "Fault", "Undefined_Treat_as_Fault", "Undefined_Treat_as__Fault",
+        ) and self._bp_prev_gear_shifter == GearShifter.drive and ret.vEgo > 1.0:
+          gear = "Drive"
       else:
         gear = self.shifter_values.get(cp.vl["PowertrainData_10"]["TrnRng_D_Rq"])
 
       ret.gearShifter = self.parse_gear_shifter(gear)
+      if self.CP.flags & FordFlags.ALT_STEER_ANGLE:
+        self._bp_prev_gear_shifter = ret.gearShifter
     elif self.CP.transmissionType == TransmissionType.manual:
       if bool(cp.vl["BCM_Lamp_Stat_FD1"]["RvrseLghtOn_B_Stat"]):
         ret.gearShifter = GearShifter.reverse

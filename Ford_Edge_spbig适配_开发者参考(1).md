@@ -275,3 +275,16 @@ python3 -c 'from opendbc.car.ford.carstate import CarState; print("OK")'
 # 6. 编译
 scons -j$(nproc)
 ```
+
+
+
+
+
+边框颜色：
+mads.enabled 且 selfdrive.enabled → 绿色 ENGAGED
+仅 mads.enabled → 青色 LAT_ONLY
+仅 selfdrive.enabled → 紫色 LONG_ONLY
+都未开 → 蓝色 DISENGAGED
+preEnabled、纵向 override、MADS paused/overriding → 灰色 OVERRIDE
+
+

@@ -54,13 +54,46 @@ class ControlsExt(ModelStateBase):
 
       self._param_update_time = time.monotonic()
 
+  def _bp_ford_driver_steering_override(self, sm: messaging.SubMaster) -> bool:
+    cs = sm['carState']
+    if cs.steeringPressed:
+      return True
+    return any(e.overrideLateral for e in sm['onroadEvents'])
+
+  def _bp_ford_lka_resume_lateral(self, sm: messaging.SubMaster) -> bool:
+    """MADS enabled but paused (gray UI) — resume lat when D + moving, no steer override."""
+    if self.CP.brand != "ford":
+      return False
+    ss_sp = sm['selfdriveStateSP']
+    if not ss_sp.mads.available or not ss_sp.mads.enabled or ss_sp.mads.active:
+      return False
+    cs = sm['carState']
+    if cs.gearShifter != structs.CarState.GearShifter.drive:
+      return False
+    if cs.vEgo < 0.5:
+      return False
+    if self._bp_ford_driver_steering_override(sm):
+      return False
+    return True
+
   def get_lat_active(self, sm: messaging.SubMaster) -> bool:
     if self.blinker_pause_lateral.update(sm['carState']):
       return False
 
+    # BluePilot: Ford — no lateral while driver is steering (override)
+    if self.CP.brand == "ford" and self._bp_ford_driver_steering_override(sm):
+      return False
+    # End BluePilot
+
     ss_sp = sm['selfdriveStateSP']
     if ss_sp.mads.available:
-      return bool(ss_sp.mads.active)
+      if bool(ss_sp.mads.active):
+        return True
+      # BluePilot: Ford LKA hold — mads.enabled but paused; still command lateral
+      if self._bp_ford_lka_resume_lateral(sm):
+        return True
+      # End BluePilot
+      return False
 
     # MADS not available, use stock state to engage
     return bool(sm['selfdriveState'].active)

@@ -10,8 +10,12 @@ from cereal import log, custom
 from opendbc.car import structs
 from opendbc.car.hyundai.values import HyundaiFlags
 from openpilot.common.params import Params
+from openpilot.selfdrive.selfdrived.events import ET
 from openpilot.sunnypilot.mads.helpers import MadsSteeringModeOnBrake, read_steering_mode_param, MADS_NO_ACC_MAIN_BUTTON
 from openpilot.sunnypilot.mads.state import StateMachine, GEARS_ALLOW_PAUSED_SILENT
+
+# BluePilot: Ford LKA — minimum speed (m/s) to count as "driving" for mandatory lateral hold
+FORD_LKA_LAT_HOLD_MIN_VEGO = 0.5
 
 State = custom.ModularAssistiveDrivingSystem.ModularAssistiveDrivingSystemState
 ButtonType = structs.CarState.ButtonEvent.Type
@@ -55,6 +59,8 @@ class ModularAssistiveDrivingSystem:
     self.main_enabled_toggle = self.params.get_bool("MadsMainCruiseAllowed")
     self.steering_mode_on_brake = read_steering_mode_param(self.CP, self.CP_SP, self.params)
     self.unified_engagement_mode = self.params.get_bool("MadsUnifiedEngagementMode")
+    # BluePilot: set when driver presses LKA to arm lateral; cleared on LKA disable
+    self._ford_lka_user_armed = False
 
   def read_params(self):
     self.main_enabled_toggle = self.params.get_bool("MadsMainCruiseAllowed")
@@ -67,9 +73,39 @@ class ModularAssistiveDrivingSystem:
 
     return False
 
+  # BluePilot: Ford — LKA armed + D + moving + no driver steer override → keep lateral
+  def _ford_lka_lat_hold_active(self, CS: structs.CarState) -> bool:
+    if self.CP.brand != "ford" or not self._ford_lka_user_armed:
+      return False
+    if CS.gearShifter != GearShifter.drive:
+      return False
+    if CS.vEgo < FORD_LKA_LAT_HOLD_MIN_VEGO:
+      return False
+    if CS.steeringPressed:
+      return False
+    if self.events.has(EventName.steerOverride) or self.events.has(EventName.steerDisengage):
+      return False
+    if self.events.contains(ET.OVERRIDE_LATERAL):
+      return False
+    return True
+
+  def _ford_clear_spurious_gear_pause_events(self) -> None:
+    self.events.remove(EventName.wrongGear)
+    self.events.remove(EventName.reverseGear)
+    for ev in GEARS_ALLOW_PAUSED_SILENT:
+      self.events_sp.remove(ev)
+    self.events_sp.remove(EventNameSP.silentLkasDisable)
+
+  # End BluePilot
+
   def should_silent_lkas_enable(self, CS: structs.CarState) -> bool:
     if self.steering_mode_on_brake == MadsSteeringModeOnBrake.PAUSE and self.pedal_pressed_non_gas_pressed(CS):
       return False
+
+    # BluePilot: Ford LKA hold — re-arm lateral from paused despite silent gear events
+    if self._ford_lka_lat_hold_active(CS):
+      return True
+    # End BluePilot
 
     if self.events_sp.contains_in_list(GEARS_ALLOW_PAUSED_SILENT):
       return False
@@ -105,37 +141,6 @@ class ModularAssistiveDrivingSystem:
     self.events_sp.add(new_event)
 
   def update_events(self, CS: structs.CarState):
-    if not self.selfdrive.enabled and self.enabled:
-      if CS.standstill:
-        if self.events.has(EventName.doorOpen):
-          self.replace_event(EventName.doorOpen, EventNameSP.silentDoorOpen)
-          self.transition_paused_state()
-        if self.events.has(EventName.seatbeltNotLatched):
-          self.replace_event(EventName.seatbeltNotLatched, EventNameSP.silentSeatbeltNotLatched)
-          self.transition_paused_state()
-      if self.events.has(EventName.wrongGear) and (CS.vEgo < 2.5 or CS.gearShifter == GearShifter.reverse):
-        self.replace_event(EventName.wrongGear, EventNameSP.silentWrongGear)
-        self.transition_paused_state()
-      if self.events.has(EventName.reverseGear):
-        self.replace_event(EventName.reverseGear, EventNameSP.silentReverseGear)
-        self.transition_paused_state()
-      if self.events.has(EventName.brakeHold):
-        self.replace_event(EventName.brakeHold, EventNameSP.silentBrakeHold)
-        self.transition_paused_state()
-      if self.events.has(EventName.parkBrake):
-        self.replace_event(EventName.parkBrake, EventNameSP.silentParkBrake)
-        self.transition_paused_state()
-
-      if self.steering_mode_on_brake == MadsSteeringModeOnBrake.PAUSE:
-        if self.pedal_pressed_non_gas_pressed(CS):
-          self.transition_paused_state()
-
-      self.events.remove(EventName.preEnableStandstill)
-      self.events.remove(EventName.belowEngageSpeed)
-      self.events.remove(EventName.speedTooLow)
-      self.events.remove(EventName.cruiseDisabled)
-      self.events.remove(EventName.manualRestart)
-
     selfdrive_enable_events = self.events.has(EventName.pcmEnable) or self.events.has(EventName.buttonEnable)
     set_speed_btns_enable = any(be.type in SET_SPEED_BUTTONS for be in CS.buttonEvents)
 
@@ -154,23 +159,83 @@ class ModularAssistiveDrivingSystem:
         if CS.cruiseState.available and not self.selfdrive.CS_prev.cruiseState.available:
           self.events_sp.add(EventNameSP.lkasEnable)
 
+    # BluePilot: Ford LKA often enables ACC on the same press — accept cruise active, not only "available"
+    ford_lkas_cruise_ok = CS.cruiseState.available
+    if self.CP.brand == "ford":
+      ford_lkas_cruise_ok = CS.cruiseState.available or CS.cruiseState.enabled
+    # End BluePilot
+
     for be in CS.buttonEvents:
       if be.type == ButtonType.cancel:
         if not self.selfdrive.enabled and self.selfdrive.enabled_prev:
           self.events_sp.add(EventNameSP.manualLongitudinalRequired)
-      if be.type == ButtonType.lkas and be.pressed and (CS.cruiseState.available or self.allow_always):
-        if self.enabled:
+      if be.type == ButtonType.lkas and be.pressed and (ford_lkas_cruise_ok or self.allow_always):
+        # BluePilot: Ford — LKA off cancels ACC: drop lateral + longitudinal (pcmDisable in selfdrived)
+        if self.CP.brand == "ford":
+          if self.enabled:
+            self.events_sp.add(EventNameSP.lkasDisable)
+            self._ford_lka_user_armed = False
+          else:
+            self.events_sp.add(EventNameSP.lkasEnable)
+            self._ford_lka_user_armed = True
+        elif self.enabled:
           if self.selfdrive.enabled:
             self.events_sp.add(EventNameSP.manualSteeringRequired)
           else:
             self.events_sp.add(EventNameSP.lkasDisable)
         else:
           self.events_sp.add(EventNameSP.lkasEnable)
+        # End BluePilot
+
+    # BluePilot: Ford LKA lateral hold (after LKA button arms _ford_lka_user_armed)
+    ford_lka_hold = self._ford_lka_lat_hold_active(CS)
+
+    if not self.selfdrive.enabled and self.enabled:
+      if CS.standstill:
+        if self.events.has(EventName.doorOpen):
+          self.replace_event(EventName.doorOpen, EventNameSP.silentDoorOpen)
+          self.transition_paused_state()
+        if self.events.has(EventName.seatbeltNotLatched):
+          self.replace_event(EventName.seatbeltNotLatched, EventNameSP.silentSeatbeltNotLatched)
+          self.transition_paused_state()
+      if self.events.has(EventName.wrongGear) and (CS.vEgo < 2.5 or CS.gearShifter == GearShifter.reverse):
+        if not (ford_lka_hold and CS.gearShifter == GearShifter.drive):
+          self.replace_event(EventName.wrongGear, EventNameSP.silentWrongGear)
+          self.transition_paused_state()
+      if self.events.has(EventName.reverseGear):
+        if not (ford_lka_hold and CS.gearShifter == GearShifter.drive):
+          self.replace_event(EventName.reverseGear, EventNameSP.silentReverseGear)
+          self.transition_paused_state()
+      if self.events.has(EventName.brakeHold):
+        self.replace_event(EventName.brakeHold, EventNameSP.silentBrakeHold)
+        self.transition_paused_state()
+      if self.events.has(EventName.parkBrake):
+        self.replace_event(EventName.parkBrake, EventNameSP.silentParkBrake)
+        self.transition_paused_state()
+
+      if self.steering_mode_on_brake == MadsSteeringModeOnBrake.PAUSE:
+        if self.pedal_pressed_non_gas_pressed(CS):
+          self.transition_paused_state()
+
+      self.events.remove(EventName.preEnableStandstill)
+      self.events.remove(EventName.belowEngageSpeed)
+      self.events.remove(EventName.speedTooLow)
+      self.events.remove(EventName.cruiseDisabled)
+      self.events.remove(EventName.manualRestart)
+    # End BluePilot
+
+    # BluePilot: Ford LKA-only engage — wrongCarMode blocks MADS before ACC main is up on same press
+    if self.CP.brand == "ford" and self.events_sp.contains(EventNameSP.lkasEnable):
+      self.events.remove(EventName.wrongCarMode)
+    # End BluePilot
 
     if not CS.cruiseState.available and not self.no_main_cruise:
       self.events.remove(EventName.buttonEnable)
       if self.selfdrive.CS_prev.cruiseState.available:
-        self.events_sp.add(EventNameSP.lkasDisable)
+        # BluePilot: keep MADS lateral when Ford LKA hold is active (ACC main may drop)
+        if not ford_lka_hold:
+          self.events_sp.add(EventNameSP.lkasDisable)
+        # End BluePilot
 
     if self.steering_mode_on_brake == MadsSteeringModeOnBrake.DISENGAGE:
       if self.pedal_pressed_non_gas_pressed(CS):
@@ -181,6 +246,13 @@ class ModularAssistiveDrivingSystem:
           if self.events_sp.contains(EventNameSP.lkasEnable):
             self.events_sp.remove(EventNameSP.lkasEnable)
             self.events_sp.add(EventNameSP.pedalPressedAlertOnly)
+
+    # BluePilot: Ford LKA hold — clear spurious pause events and re-arm lateral from paused
+    if ford_lka_hold:
+      self._ford_clear_spurious_gear_pause_events()
+      if self.state_machine.state == State.paused:
+        self.events_sp.add(EventNameSP.silentLkasEnable)
+    # End BluePilot
 
     if self.should_silent_lkas_enable(CS):
       if self.state_machine.state == State.paused:
