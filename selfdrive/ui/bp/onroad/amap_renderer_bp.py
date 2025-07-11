@@ -2,11 +2,13 @@
 from __future__ import annotations
 
 import math
+import ssl
 import threading
 import urllib.request
 
 import pyray as rl
 
+from openpilot.common.gps import get_gps_location_service
 from openpilot.common.params import Params
 from openpilot.common.swaglog import cloudlog
 from openpilot.selfdrive.ui.bp.lib.amap_coords import latlon_to_pixel, latlon_to_tile, wgs84_to_gcj02
@@ -29,6 +31,10 @@ TILE_URL = (
   "https://wprd0{server}.is.autonavi.com/appmaptile"
   "?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}"
 )
+_SSL_CTX = ssl.create_default_context()
+_SSL_CTX_UNVERIFIED = ssl.create_default_context()
+_SSL_CTX_UNVERIFIED.check_hostname = False
+_SSL_CTX_UNVERIFIED.verify_mode = ssl.CERT_NONE
 
 
 class _TileCache:
@@ -37,6 +43,9 @@ class _TileCache:
     self._textures: dict[tuple[int, int, int], rl.Texture] = {}
     self._pending: set[tuple[int, int, int]] = set()
     self._failed: set[tuple[int, int, int]] = set()
+    # BluePilot: decode PNG on UI thread — Raylib textures must not be created from worker threads
+    self._queued_bytes: dict[tuple[int, int, int], bytes] = {}
+    # End BluePilot
 
   def get(self, z: int, x: int, y: int) -> rl.Texture | None:
     with self._lock:
@@ -58,30 +67,60 @@ class _TileCache:
   def request(self, z: int, x: int, y: int) -> None:
     key = (z, x, y)
     with self._lock:
-      if key in self._textures or key in self._pending or key in self._failed:
+      if key in self._textures or key in self._pending or key in self._queued_bytes:
+        return
+      if key in self._failed:
         return
       self._pending.add(key)
     threading.Thread(target=self._download, args=(z, x, y), daemon=True).start()
+
+  def flush_uploads(self) -> None:
+    """Upload queued tile PNGs to GPU textures (call from UI render thread only)."""
+    with self._lock:
+      queued = dict(self._queued_bytes)
+      self._queued_bytes.clear()
+    for key, data in queued.items():
+      try:
+        image = rl.load_image_from_memory(".png", data, len(data))
+        if image.width <= 0 or image.height <= 0:
+          rl.unload_image(image)
+          raise ValueError("invalid tile image")
+        texture = rl.load_texture_from_image(image)
+        rl.unload_image(image)
+        rl.set_texture_filter(texture, rl.TextureFilter.TEXTURE_FILTER_BILINEAR)
+        with self._lock:
+          self._textures[key] = texture
+      except Exception as exc:
+        cloudlog.debug(f"Amap tile GPU upload failed {key}: {exc}")
+        with self._lock:
+          self._failed.add(key)
 
   def _download(self, z: int, x: int, y: int) -> None:
     key = (z, x, y)
     server = (x + y) % 4 + 1
     url = TILE_URL.format(server=server, x=x, y=y, z=z)
+    req = urllib.request.Request(url, headers={"User-Agent": "BluePilot/1.0"})
+    data = None
+    for ctx in (_SSL_CTX, _SSL_CTX_UNVERIFIED):
+      try:
+        with urllib.request.urlopen(req, timeout=8, context=ctx) as resp:
+          data = resp.read()
+        break
+      except ssl.SSLError as exc:
+        if ctx is _SSL_CTX:
+          cloudlog.warning(f"Amap tile SSL failed (retry unverified) z={z} x={x} y={y}: {exc}")
+          continue
+        cloudlog.debug(f"Amap tile download SSL failed z={z} x={x} y={y}: {exc}")
+      except Exception as exc:
+        cloudlog.debug(f"Amap tile download failed z={z} x={x} y={y}: {exc}")
+        break
     try:
-      req = urllib.request.Request(url, headers={"User-Agent": "BluePilot/1.0"})
-      with urllib.request.urlopen(req, timeout=8) as resp:
-        data = resp.read()
+      if data is None:
+        raise ValueError("no tile data")
       if len(data) < 128:
         raise ValueError("tile payload too small")
-      image = rl.load_image_from_memory(".png", data, len(data))
-      if image.width <= 0 or image.height <= 0:
-        rl.unload_image(image)
-        raise ValueError("invalid tile image")
-      texture = rl.load_texture_from_image(image)
-      rl.unload_image(image)
-      rl.set_texture_filter(texture, rl.TextureFilter.TEXTURE_FILTER_BILINEAR)
       with self._lock:
-        self._textures[key] = texture
+        self._queued_bytes[key] = data
     except Exception as exc:
       cloudlog.debug(f"Amap tile download failed z={z} x={x} y={y}: {exc}")
       with self._lock:
@@ -97,6 +136,7 @@ class _TileCache:
       self._textures.clear()
       self._pending.clear()
       self._failed.clear()
+      self._queued_bytes.clear()
 
 
 def _rotation_cover_factor(bearing_deg: float) -> float:
@@ -146,6 +186,7 @@ class AmapRendererBP:
     self._render_target: rl.RenderTexture | None = None
     self._rt_size = (0, 0)
     self._cached_key = ""
+    self._gps_service = get_gps_location_service(self._params)
 
   def close(self) -> None:
     if self._render_target is not None:
@@ -156,6 +197,7 @@ class AmapRendererBP:
   def update(self) -> None:
     """Prefetch tiles for the current GPS position while onroad."""
     self._sync_key_state()
+    self._tiles.flush_uploads()
     self._prefetch_tiles()
 
   def tiles_ready(self) -> bool:
@@ -175,6 +217,7 @@ class AmapRendererBP:
     return OnroadDisplayState.show_map() and self.tiles_ready()
 
   def render(self, content_rect: rl.Rectangle) -> None:
+    self._tiles.flush_uploads()
     grid = self._current_tile_grid()
     if grid is None:
       return
@@ -256,12 +299,29 @@ class AmapRendererBP:
       src_y += src_strip_h
     rl.end_scissor_mode()
 
-  def _current_tile_grid(self) -> tuple[float, float, float, int, int, int] | None:
+  def _get_gps_fix(self):
+    """Return GPS message with fix, preferring the active location service for this device."""
     sm = ui_state.sm
-    if not sm.valid.get("gpsLocationExternal", False):
-      return None
-    gps = sm["gpsLocationExternal"]
-    if not gps.hasFix:
+    service = get_gps_location_service(self._params)
+    if service != self._gps_service:
+      self._gps_service = service
+    if sm.valid.get(service, False):
+      gps = sm[service]
+      if gps.hasFix:
+        return gps
+    # BluePilot: fallback when SubMaster has the alternate GPS topic (e.g. during Ublox transition)
+    for alt in ("gpsLocationExternal", "gpsLocation"):
+      if alt == service:
+        continue
+      if sm.valid.get(alt, False):
+        gps = sm[alt]
+        if gps.hasFix:
+          return gps
+    return None
+
+  def _current_tile_grid(self) -> tuple[float, float, float, int, int, int] | None:
+    gps = self._get_gps_fix()
+    if gps is None:
       return None
 
     lat, lon = wgs84_to_gcj02(gps.latitude, gps.longitude)
