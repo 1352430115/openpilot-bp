@@ -65,17 +65,29 @@ set_lite_hw() {
 }
 # End BluePilot
 
-# BluePilot: C3 red panda uses H7 firmware; provide F4-named aliases for DFU recovery
+# BluePilot: C3 panda firmware setup — F4 copy for classic C3, H7 aliases for C3X
 function ensure_c3_panda_firmware {
-  for obj in "$DIR/panda/board/obj" "$DIR/panda_tici/board/obj"; do
-    [ -d "$obj" ] || continue
-    if [ -f "$obj/bootstub.panda_h7.bin" ] && [ ! -e "$obj/bootstub.panda.bin" ]; then
-      ln -sf bootstub.panda_h7.bin "$obj/bootstub.panda.bin"
-    fi
-    if [ -f "$obj/panda_h7.bin.signed" ] && [ ! -e "$obj/panda.bin.signed" ]; then
-      ln -sf panda_h7.bin.signed "$obj/panda.bin.signed"
-    fi
-  done
+  mkdir -p "$DIR/panda_tici/board/obj"
+
+  if [ "$TICI_TRES" = "1" ]; then
+    for obj in "$DIR/panda/board/obj" "$DIR/panda_tici/board/obj"; do
+      [ -d "$obj" ] || continue
+      if [ -f "$obj/bootstub.panda_h7.bin" ] && [ ! -e "$obj/bootstub.panda.bin" ]; then
+        ln -sf bootstub.panda_h7.bin "$obj/bootstub.panda.bin"
+      fi
+      if [ -f "$obj/panda_h7.bin.signed" ] && [ ! -e "$obj/panda.bin.signed" ]; then
+        ln -sf panda_h7.bin.signed "$obj/panda.bin.signed"
+      fi
+    done
+  else
+    for name in panda.bin.signed bootstub.panda.bin; do
+      src="$DIR/panda/board/obj/$name"
+      dst="$DIR/panda_tici/board/obj/$name"
+      if [ -f "$src" ] && [ ! -e "$dst" ]; then
+        cp -f "$src" "$dst"
+      fi
+    done
+  fi
 }
 # End BluePilot
 

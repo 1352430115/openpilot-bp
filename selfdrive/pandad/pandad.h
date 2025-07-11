@@ -8,6 +8,14 @@
 
 void pandad_main_thread(std::vector<std::string> serials);
 
+// BluePilot: upstream only supports newer H7 pandas in firmware checks
+static const std::vector<cereal::PandaState::PandaType> SUPPORTED_PANDA_TYPES = {
+  cereal::PandaState::PandaType::RED_PANDA,
+  cereal::PandaState::PandaType::TRES,
+  cereal::PandaState::PandaType::CUATRO,
+};
+// End BluePilot
+
 class PandaSafety {
 public:
   PandaSafety(const std::vector<Panda *> &pandas) : pandas_(pandas) {}

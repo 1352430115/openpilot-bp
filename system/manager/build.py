@@ -14,10 +14,21 @@ from openpilot.system.version import get_build_metadata
 MAX_CACHE_SIZE = 4e9 if "CI" in os.environ else 2e9
 CACHE_DIR = Path("/data/scons_cache" if AGNOS else "/tmp/scons_cache")
 
-# BluePilot: C3 red panda firmware is H7; alias legacy F4 names for DFU recovery
+# BluePilot: C3 panda firmware setup — F4 copy for classic C3, H7 aliases for C3X
 def ensure_c3_panda_firmware() -> None:
   if not AGNOS:
     return
+
+  import shutil
+
+  def _copy_f4_firmware(src_obj: Path, dst_obj: Path) -> None:
+    if not src_obj.is_dir() or not dst_obj.is_dir():
+      return
+    for name in ("panda.bin.signed", "bootstub.panda.bin"):
+      src = src_obj / name
+      dst = dst_obj / name
+      if src.is_file() and not dst.exists():
+        shutil.copy2(src, dst)
 
   def _link_h7_aliases(obj: Path) -> None:
     if not obj.is_dir():
@@ -31,8 +42,15 @@ def ensure_c3_panda_firmware() -> None:
     if h7_fw.is_file() and not f4_fw.exists():
       f4_fw.symlink_to("panda_h7.bin.signed")
 
-  _link_h7_aliases(Path(BASEDIR) / "panda" / "board" / "obj")
-  _link_h7_aliases(Path(BASEDIR) / "panda_tici" / "board" / "obj")
+  panda_obj = Path(BASEDIR) / "panda" / "board" / "obj"
+  panda_tici_obj = Path(BASEDIR) / "panda_tici" / "board" / "obj"
+  panda_tici_obj.mkdir(parents=True, exist_ok=True)
+
+  if os.environ.get("TICI_TRES") == "1":
+    _link_h7_aliases(panda_obj)
+    _link_h7_aliases(panda_tici_obj)
+  else:
+    _copy_f4_firmware(panda_obj, panda_tici_obj)
 # End BluePilot
 
 TOTAL_SCONS_NODES = 2705

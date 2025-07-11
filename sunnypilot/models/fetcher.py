@@ -34,10 +34,17 @@ class ModelParser:
     return artifact
 
   @staticmethod
+  def _normalize_model_type(model_type: str | None) -> str | None:
+    # BluePilot: tolerate stale cache entries that used the old onPolicy name
+    if model_type == "onPolicy":
+      return "offPolicy"
+    return model_type
+
+  @staticmethod
   def _parse_model(model_data) -> custom.ModelManagerSP.Model:
     model = custom.ModelManagerSP.Model()
 
-    model.type = model_data.get("type")
+    model.type = ModelParser._normalize_model_type(model_data.get("type"))
     model.artifact = ModelParser._parse_artifact(model_data.get("artifact", {}))
     if metadata := model_data.get("metadata"):
       model.metadata = ModelParser._parse_artifact(metadata)
@@ -113,6 +120,11 @@ class ModelCache:
     self.params.put(self._CACHE_KEY, data)
     self.params.put(self._LAST_SYNC_KEY, int(time.monotonic() * 1e9))
 
+  def clear(self) -> None:
+    """Clears cached model manifest"""
+    self.params.remove(self._CACHE_KEY)
+    self.params.remove(self._LAST_SYNC_KEY)
+
 
 class ModelFetcher:
   """Handles fetching and caching of model data from remote source"""
@@ -160,7 +172,12 @@ class ModelFetcher:
 
     if cached_data and not is_expired:
       cloudlog.debug("Using valid cached models data")
-      return self.model_parser.parse_models(cached_data)
+      try:
+        return self.model_parser.parse_models(cached_data)
+      except Exception as e:
+        cloudlog.warning(f"Cached model data invalid ({e}), clearing cache and refetching")
+        self.model_cache.clear()
+        cached_data = {}
 
     fetched_bundles = self._fetch_and_cache_models()
     if fetched_bundles is not None:
@@ -168,9 +185,15 @@ class ModelFetcher:
 
     if not cached_data:
       cloudlog.warning("Failed to fetch fresh data and no cache available")
+      return []
 
     cloudlog.warning("Failed to fetch fresh data. Using expired cache as fallback")
-    return self.model_parser.parse_models(cached_data)
+    try:
+      return self.model_parser.parse_models(cached_data)
+    except Exception as e:
+      cloudlog.warning(f"Expired model cache invalid ({e}), clearing cache")
+      self.model_cache.clear()
+      return []
 
 if __name__ == "__main__":
   params = Params()

@@ -44,6 +44,18 @@ def flash_panda(panda_serial: str) -> Panda:
   panda_signature = b"" if panda.bootstub else panda.get_signature()
   cloudlog.warning(f"Panda {panda_serial} connected, version: {panda_version}, signature {panda_signature.hex()[:16]}, expected {fw_signature.hex()[:16]}")
 
+  # BluePilot: do not auto-reflash legacy C3 internal F4/DOS pandas on branch upgrades
+  fn = os.path.join(FW_PATH, panda.get_mcu_type().config.app_fn)
+  if not os.path.isfile(fn):
+    cloudlog.warning(f"Panda firmware file missing at {fn}, skipping flash...")
+    return panda
+  if os.environ.get("TICI_HW") and os.environ.get("TICI_TRES") != "1" and panda.get_type() == Panda.HW_TYPE_DOS:
+    if panda_signature and panda_signature == fw_signature:
+      return panda
+    cloudlog.warning(f"Panda {panda_serial} is legacy C3 F4/DOS, skipping auto-flash...")
+    return panda
+  # End BluePilot
+
   if panda.bootstub or panda_signature != fw_signature:
     cloudlog.info("Panda firmware out of date, update required")
     panda.flash()

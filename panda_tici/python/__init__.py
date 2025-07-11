@@ -100,8 +100,6 @@ ensure_can_packet_version = partial(ensure_version, "CAN", "CAN_PACKET_VERSION",
 ensure_can_health_packet_version = partial(ensure_version, "CAN health", "CAN_HEALTH_PACKET_VERSION", "can_health_version")
 ensure_health_packet_version = partial(ensure_version, "health", "HEALTH_PACKET_VERSION", "health_version")
 
-
-
 class Panda:
 
   SERIAL_DEBUG = 0
@@ -129,6 +127,10 @@ class Panda:
 
   CAN_PACKET_VERSION = 4
   HEALTH_PACKET_VERSION = 17
+  # BluePilot: classic C3 F4/DOS firmware still reports health packet v16
+  LEGACY_HEALTH_PACKET_VERSION = 16
+  LEGACY_HEALTH_STRUCT = struct.Struct("<IIIIIIIIBBBBBHBBBHfBBHHH")
+  # End BluePilot
   CAN_HEALTH_PACKET_VERSION = 5
   HEALTH_STRUCT = struct.Struct("<IIIIIIIIBBBBBHBBBHfBBHHHB")
   CAN_HEALTH_STRUCT = struct.Struct("<BIBBBBBBBBIIIIIIIHHBBBIIII")
@@ -536,11 +538,22 @@ class Panda:
 
   # ******************* health *******************
 
-  @ensure_health_packet_version
+  def _uses_legacy_health(self) -> bool:
+    # BluePilot: allow health v16 on classic C3 internal F4/DOS pandas
+    return (self.health_version == self.LEGACY_HEALTH_PACKET_VERSION and
+            os.environ.get("TICI_HW") and os.environ.get("TICI_TRES") != "1" and
+            self.get_type() in self.F4_DEVICES)
+    # End BluePilot
+
+  def _health_struct(self):
+    return self.LEGACY_HEALTH_STRUCT if self._uses_legacy_health() else self.HEALTH_STRUCT
+
   def health(self):
-    dat = self._handle.controlRead(Panda.REQUEST_IN, 0xd2, 0, 0, self.HEALTH_STRUCT.size)
-    a = self.HEALTH_STRUCT.unpack(dat)
-    return {
+    if self.health_version != self.HEALTH_PACKET_VERSION and not self._uses_legacy_health():
+      raise RuntimeError(f"health packet version mismatch: panda's firmware v{self.health_version}, library v{self.HEALTH_PACKET_VERSION}. Reflash panda.")
+    dat = self._handle.controlRead(Panda.REQUEST_IN, 0xd2, 0, 0, self._health_struct().size)
+    a = self._health_struct().unpack(dat)
+    health = {
       "uptime": a[0],
       "voltage": a[1],
       "current": a[2],
@@ -565,8 +578,9 @@ class Panda:
       "spi_error_count": a[21],
       "sbu1_voltage_mV": a[22],
       "sbu2_voltage_mV": a[23],
-      "som_reset_triggered": a[24],
     }
+    health["som_reset_triggered"] = 0 if self._uses_legacy_health() else a[24]
+    return health
 
   @ensure_can_health_packet_version
   def can_health(self, can_number):
