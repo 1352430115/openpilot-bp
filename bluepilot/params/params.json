@@ -508,6 +508,15 @@
       "create_default": false,
       "enabled": true,
       "description": "Gaode (Amap) Web Service API key for onroad map overlay"
+    },
+    {
+      "name": "BPDisableSeatbeltGate",
+      "default": true,
+      "type": "bool",
+      "flags": ["PERSISTENT", "BACKUP"],
+      "create_default": true,
+      "enabled": true,
+      "description": "When true, do not block openpilot/MADS engage when driver seatbelt appears unlatched"
     }
   ]
 }

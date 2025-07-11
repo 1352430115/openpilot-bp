@@ -73,6 +73,7 @@ class BluePilotLayout(Widget):
       ("disable_BP_long_UI", self._disable_BP_long),
       ("disable_downhill_comp_UI", self._disable_dowhill_comp),
       ("BPUIDebugLog", self._ui_debug_log),
+      ("BPDisableSeatbeltGate", self._disable_seatbelt_gate),
     )
 
     ui_state.add_offroad_transition_callback(self._update_toggles)
@@ -352,6 +353,16 @@ class BluePilotLayout(Widget):
       icon="warning.png"
     )
 
+    # Ignore seatbelt engage gate (MADS / openpilot entry)
+    self._disable_seatbelt_gate = toggle_item(
+      lambda: tr("Ignore Seatbelt Engagement Check"),
+      lambda: tr("Do not pause or block assist when the seatbelt signal shows unlatched. "
+                 "Use only if the vehicle reports a false unlatched state."),
+      initial_state=self._safe_get_bool(self._params, "BPDisableSeatbeltGate", default=True),
+      callback=lambda state: self._toggle_callback(state, "BPDisableSeatbeltGate"),
+      icon="warning.png"
+    )
+
     # Disable BP lateral control toggle
     self._disable_BP_lat = toggle_item(
       lambda: tr("Disable BP Lateral Control"),
@@ -422,6 +433,7 @@ class BluePilotLayout(Widget):
       self._disable_BP_long,
       self._disable_dowhill_comp,
       SectionHeader(tr("Lateral Tuning")),
+      self._disable_seatbelt_gate,
       self._disable_BP_lat,
       self._enable_human_turn_detection,
       self._disable_lane_change_under_speed,

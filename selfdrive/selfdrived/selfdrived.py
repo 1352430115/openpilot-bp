@@ -146,8 +146,14 @@ class SelfdriveD(CruiseHelper):
     self.ignored_processes = {'mapd', }
 
     # Determine startup event
-    is_remote = build_metadata.openpilot.comma_remote or build_metadata.openpilot.sunnypilot_remote
-    self.startup_event = EventName.startup if is_remote and build_metadata.tested_channel else EventName.startupMaster
+    # BluePilot: suppress "WARNING: This branch is not tested" on bp-* / BluePilot branches
+    _bp_branch = build_metadata.channel.startswith("bp-") or build_metadata.channel.startswith("BluePilot")
+    if _bp_branch:
+      self.startup_event = EventName.startup
+    else:
+      is_remote = build_metadata.openpilot.comma_remote or build_metadata.openpilot.sunnypilot_remote
+      self.startup_event = EventName.startup if is_remote and build_metadata.tested_channel else EventName.startupMaster
+    # End BluePilot
     if HARDWARE.get_device_type() == 'mici':
       self.startup_event = None
     if not car_recognized:

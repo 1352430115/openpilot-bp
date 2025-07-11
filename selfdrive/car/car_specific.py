@@ -104,8 +104,18 @@ class CarSpecificEvents:
 
     if CS.doorOpen:
       events.add(EventName.doorOpen)
+    # BluePilot: optional bypass — BPDisableSeatbeltGate (default on) avoids MADS pause from seatbelt
     if CS.seatbeltUnlatched:
-      events.add(EventName.seatbeltNotLatched)
+      from openpilot.common.params import Params
+      from openpilot.common.params_pyx import UnknownKeyName
+      enforce_seatbelt = True
+      try:
+        enforce_seatbelt = not Params().get_bool("BPDisableSeatbeltGate")
+      except UnknownKeyName:
+        enforce_seatbelt = False
+      if enforce_seatbelt:
+        events.add(EventName.seatbeltNotLatched)
+    # End BluePilot
     if CS.gearShifter != GearShifter.drive and CS.gearShifter not in CI.DRIVABLE_GEARS:
       events.add(EventName.wrongGear)
     if CS.gearShifter == GearShifter.reverse:

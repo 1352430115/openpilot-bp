@@ -29,13 +29,45 @@ def get_expected_signature(panda: Panda) -> bytes:
     cloudlog.exception("Error computing expected signature")
     return b""
 
-def flash_panda(panda_serial: str) -> Panda:
+def get_expected_fw_version(panda: Panda) -> str:
+  fn = os.path.join(FW_PATH, panda.get_mcu_type().config.app_fn)
+  version_fn = os.path.join(os.path.dirname(fn), "version")
+  try:
+    with open(version_fn) as f:
+      return f.read().split("\x00")[0].strip()
+  except OSError:
+    return ""
+
+def panda_fw_up_to_date(panda: Panda, fw_signature: bytes) -> bool:
+  """Skip reflash on boot when panda app firmware matches the deployed build."""
+  if panda.bootstub or not fw_signature:
+    return False
+  try:
+    if panda.get_signature() != fw_signature:
+      return False
+    expected_version = get_expected_fw_version(panda)
+    if not expected_version:
+      return True
+    current_version = panda.get_version().split("\x00")[0].strip()
+    return current_version == expected_version
+  except Exception:
+    cloudlog.exception("Error checking panda firmware version")
+    return False
+
+def flash_panda(panda_serial: str, *, skip_firmware_update: bool = False) -> Panda:
   try:
     panda = Panda(panda_serial)
   except PandaProtocolMismatch:
     cloudlog.warning("detected protocol mismatch, reflashing panda")
     HARDWARE.recover_internal_panda()
     raise
+
+  # BluePilot: Quickboot Mode — skip panda firmware reflash for faster boot
+  if skip_firmware_update:
+    panda_version = "bootstub" if panda.bootstub else panda.get_version()
+    cloudlog.info(f"QuickBootToggle enabled, skipping panda firmware update for {panda_serial} (version={panda_version})")
+    return panda
+  # End BluePilot
 
   fw_signature = get_expected_signature(panda)
   internal_panda = panda.is_internal()
@@ -44,17 +76,14 @@ def flash_panda(panda_serial: str) -> Panda:
   panda_signature = b"" if panda.bootstub else panda.get_signature()
   cloudlog.warning(f"Panda {panda_serial} connected, version: {panda_version}, signature {panda_signature.hex()[:16]}, expected {fw_signature.hex()[:16]}")
 
-  # BluePilot: do not auto-reflash legacy C3 internal F4/DOS pandas on branch upgrades
   fn = os.path.join(FW_PATH, panda.get_mcu_type().config.app_fn)
   if not os.path.isfile(fn):
     cloudlog.warning(f"Panda firmware file missing at {fn}, skipping flash...")
     return panda
-  if os.environ.get("TICI_HW") and os.environ.get("TICI_TRES") != "1" and panda.get_type() == Panda.HW_TYPE_DOS:
-    if panda_signature and panda_signature == fw_signature:
-      return panda
-    cloudlog.warning(f"Panda {panda_serial} is legacy C3 F4/DOS, skipping auto-flash...")
+
+  if panda_fw_up_to_date(panda, fw_signature):
+    cloudlog.info(f"Panda {panda_serial} firmware up to date (version={panda_version}), skipping flash")
     return panda
-  # End BluePilot
 
   if panda.bootstub or panda_signature != fw_signature:
     cloudlog.info("Panda firmware out of date, update required")
@@ -105,9 +134,13 @@ def main() -> None:
       cloudlog.event("pandad.flash_and_connect", count=count)
       params.remove("PandaSignatures")
 
+      # BluePilot: Quickboot Mode skips panda firmware reflash
+      skip_panda_firmware_update = params.get_bool("QuickBootToggle")
+      # End BluePilot
+
       # Handle missing internal panda
       if no_internal_panda_count > 0:
-        if no_internal_panda_count == 3:
+        if no_internal_panda_count == 3 and not skip_panda_firmware_update:
           cloudlog.info("No pandas found, putting internal panda into DFU")
           HARDWARE.recover_internal_panda()
         else:
@@ -117,7 +150,7 @@ def main() -> None:
 
       # Flash all Pandas in DFU mode
       dfu_serials = PandaDFU.list()
-      if len(dfu_serials) > 0:
+      if len(dfu_serials) > 0 and not skip_panda_firmware_update:
         for serial in dfu_serials:
           cloudlog.info(f"Panda in DFU mode found, flashing recovery {serial}")
           PandaDFU(serial).recover()
@@ -133,10 +166,11 @@ def main() -> None:
       # Flash pandas
       pandas: list[Panda] = []
       for serial in panda_serials:
-        pandas.append(flash_panda(serial))
+        pandas.append(flash_panda(serial, skip_firmware_update=skip_panda_firmware_update))
 
-      for panda in pandas:
-        flash_rivian_long(panda)
+      if not skip_panda_firmware_update:
+        for panda in pandas:
+          flash_rivian_long(panda)
 
       # Ensure internal panda is present if expected
       internal_pandas = [panda for panda in pandas if panda.is_internal()]
