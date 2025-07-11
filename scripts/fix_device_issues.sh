@@ -15,27 +15,41 @@ echo "BluePilot Device Issue Fixer"
 echo "================================================"
 echo ""
 
-# Fix 1: Kill duplicate manager processes
-echo "[1/3] Checking for multiple manager processes..."
-MANAGER_PIDS=$(ps aux | grep 'python3 ./manager.py' | grep -v grep | awk '{print $2}')
-MANAGER_COUNT=$(echo "$MANAGER_PIDS" | wc -l)
+# Fix 1: Kill duplicate manager instances (not forkpty parent/child pairs)
+echo "[1/3] Checking for multiple manager instances..."
+# manager.py uses forkpty in unblock_stdout(): expect 2 PIDs per instance (parent + child).
+count_manager_instances() {
+  local n=0
+  for pid in $(pgrep -f 'python3 ./manager.py' 2>/dev/null || true); do
+    ppid=$(ps -o ppid= -p "$pid" 2>/dev/null | tr -d ' ')
+    if [ -z "$ppid" ]; then
+      continue
+    fi
+    if ! ps -p "$ppid" -o args= 2>/dev/null | grep -q 'python3 ./manager.py'; then
+      n=$((n + 1))
+    fi
+  done
+  echo "$n"
+}
+MANAGER_INSTANCES=$(count_manager_instances)
+MANAGER_PIDS=$(pgrep -f 'python3 ./manager.py' 2>/dev/null || true)
 
-if [ "$MANAGER_COUNT" -gt 1 ]; then
-    echo "  Found $MANAGER_COUNT manager processes (should be 1)"
-    echo "  Keeping the oldest process, killing others..."
+if [ "$MANAGER_INSTANCES" -gt 1 ]; then
+    echo "  Found $MANAGER_INSTANCES manager instances ($MANAGER_PIDS raw PIDs)"
+    echo "  Keeping the oldest root manager, stopping other instances..."
 
-    # Get oldest PID (first one)
-    OLDEST_PID=$(echo "$MANAGER_PIDS" | head -1)
-
-    # Kill all except oldest
-    echo "$MANAGER_PIDS" | tail -n +2 | while read pid; do
-        echo "  Killing duplicate manager PID: $pid"
-        kill -15 "$pid" 2>/dev/null || true
+    ROOT_PID=$(pgrep -f 'python3 ./manager.py' 2>/dev/null | head -1)
+    for pid in $MANAGER_PIDS; do
+        ppid=$(ps -o ppid= -p "$pid" 2>/dev/null | tr -d ' ')
+        if ! ps -p "$ppid" -o args= 2>/dev/null | grep -q 'python3 ./manager.py' && [ "$pid" != "$ROOT_PID" ]; then
+            echo "  Stopping extra manager instance PID: $pid"
+            kill -TERM "$pid" 2>/dev/null || true
+        fi
     done
-
-    echo "  ✓ Duplicate processes cleaned up"
+    sleep 2
+    echo "  ✓ Extra manager instances stopped"
 else
-    echo "  ✓ Only one manager process found (PID: $MANAGER_PIDS)"
+    echo "  ✓ Single manager instance (forkpty shows ${MANAGER_INSTANCES:-0} root + child PIDs: $MANAGER_PIDS)"
 fi
 
 echo ""

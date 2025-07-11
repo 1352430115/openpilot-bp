@@ -354,6 +354,13 @@
   margin-top: 0.25rem;
 }
 
+.param-row__description {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--bp-text-secondary, var(--text-secondary));
+}
+
 /* ============================================================================
    REDESIGNED MODAL STYLES
    ============================================================================ */

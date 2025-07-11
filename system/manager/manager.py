@@ -24,8 +24,25 @@ from openpilot.system.hardware import PC
 
 from openpilot.sunnypilot.system.params_migration import run_migration
 
+# BluePilot: hwj dp260513 C3 — alias panda_tici as panda on classic TICI (F4 internal panda)
+from openpilot.common.panda_loader import load_panda_module
+
+_panda_mod = load_panda_module()
+sys.modules["panda"] = _panda_mod
+# End BluePilot
+
 
 def manager_init() -> None:
+  # BluePilot: single manager instance (duplicate managers break process supervision)
+  import fcntl
+  _manager_lock = open("/var/tmp/openpilot_manager.lock", "w")
+  try:
+    fcntl.flock(_manager_lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+  except BlockingIOError:
+    print("ERROR: openpilot manager is already running", file=sys.stderr)
+    sys.exit(1)
+  # End BluePilot
+
   save_bootlog()
 
   build_metadata = get_build_metadata()

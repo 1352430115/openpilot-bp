@@ -1,10 +1,11 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useCallback } from 'react'
 import { Header } from '@/components/layout/Header'
 import { useParamsStore } from '@/stores/useParamsStore'
 import { LoadingSpinner, Button, Modal, ToastContainer, ToggleSwitch, BackToTop } from '@/components/common'
 import type { Parameter, DeviceStatus } from '@/types'
 import { formatParamValueForDisplay } from '@/utils/params'
 import { useTranslation } from '@/i18n'
+import type { TranslationKey } from '@/i18n'
 import './ParametersView.css'
 
 interface ParametersViewProps {
@@ -14,13 +15,15 @@ interface ParametersViewProps {
 type SortColumn = 'key' | 'value' | 'type' | 'category' | 'last_modified'
 type SortDirection = 'asc' | 'desc'
 
-const SORT_OPTIONS: { label: string; value: SortColumn }[] = [
-  { label: 'Parameter', value: 'key' },
-  { label: 'Value', value: 'value' },
-  { label: 'Type', value: 'type' },
-  { label: 'Category', value: 'category' },
-  { label: 'Last Modified', value: 'last_modified' },
-]
+const SORT_COLUMNS: SortColumn[] = ['key', 'value', 'type', 'category', 'last_modified']
+
+const SORT_LABEL_KEYS: Record<SortColumn, TranslationKey> = {
+  key: 'parameters.sort.key',
+  value: 'parameters.sort.value',
+  type: 'parameters.sort.type',
+  category: 'parameters.sort.category',
+  last_modified: 'parameters.sort.lastModified',
+}
 
 const NUMERIC_TYPES = new Set(['number', 'int', 'float'])
 const BOOLEAN_TYPES = new Set(['boolean', 'bool'])
@@ -58,22 +61,33 @@ export const ParametersView = ({ deviceStatus = 'checking' }: ParametersViewProp
     fetchParams()
   }, [fetchParams])
 
-  const formatLastModified = (timestamp?: number): string => {
-    if (!timestamp) return 'Never'
+  useEffect(() => {
+    const onLanguageChanged = () => {
+      fetchParams()
+    }
+    window.addEventListener('bp-language-changed', onLanguageChanged)
+    return () => window.removeEventListener('bp-language-changed', onLanguageChanged)
+  }, [fetchParams])
 
-    const date = new Date(timestamp * 1000)
-    const now = new Date()
-    const diffMs = now.getTime() - date.getTime()
-    const diffMins = Math.floor(diffMs / 60000)
-    const diffHours = Math.floor(diffMs / 3600000)
-    const diffDays = Math.floor(diffMs / 86400000)
+  const formatLastModified = useCallback(
+    (timestamp?: number): string => {
+      if (!timestamp) return t('parameters.lastModified.never')
 
-    if (diffMins < 1) return 'Just now'
-    if (diffMins < 60) return `${diffMins}m ago`
-    if (diffHours < 24) return `${diffHours}h ago`
-    if (diffDays < 7) return `${diffDays}d ago`
-    return date.toLocaleDateString()
-  }
+      const date = new Date(timestamp * 1000)
+      const now = new Date()
+      const diffMs = now.getTime() - date.getTime()
+      const diffMins = Math.floor(diffMs / 60000)
+      const diffHours = Math.floor(diffMs / 3600000)
+      const diffDays = Math.floor(diffMs / 86400000)
+
+      if (diffMins < 1) return t('parameters.lastModified.justNow')
+      if (diffMins < 60) return t('parameters.lastModified.minutesAgo', { count: diffMins })
+      if (diffHours < 24) return t('parameters.lastModified.hoursAgo', { count: diffHours })
+      if (diffDays < 7) return t('parameters.lastModified.daysAgo', { count: diffDays })
+      return date.toLocaleDateString()
+    },
+    [t],
+  )
 
   const sortedParams = useMemo(() => {
     const filtered = getFilteredParams()
@@ -138,14 +152,15 @@ export const ParametersView = ({ deviceStatus = 'checking' }: ParametersViewProp
     setToasts((prev) => prev.filter((toast) => toast.id !== id))
   }
 
-  const copyToClipboard = (text: string, label: string = 'Value') => {
+  const copyToClipboard = (text: string, labelKey: 'parameters.label.key' | 'parameters.label.value') => {
+    const label = t(labelKey)
     navigator.clipboard
       .writeText(text)
       .then(() => {
-        addToast(`${label} copied to clipboard`, 'success')
+        addToast(t('parameters.copiedToClipboard', { label }), 'success')
       })
       .catch(() => {
-        addToast('Failed to copy to clipboard', 'error')
+        addToast(t('parameters.copyFailed'), 'error')
       })
   }
 
@@ -165,7 +180,7 @@ export const ParametersView = ({ deviceStatus = 'checking' }: ParametersViewProp
       <>
         <Header deviceStatus={deviceStatus} />
         <div className="loading">
-          <LoadingSpinner size="large" message="Loading parameters..." />
+          <LoadingSpinner size="large" message={t('parameters.loading')} />
         </div>
       </>
     )
@@ -179,15 +194,15 @@ export const ParametersView = ({ deviceStatus = 'checking' }: ParametersViewProp
         <div className="params-header">
           <div className="params-controls">
             <div className="params-sort-controls">
-              <label htmlFor="params-sort">Sort</label>
+              <label htmlFor="params-sort">{t('parameters.sort')}</label>
               <select
                 id="params-sort"
                 value={sortColumn}
                 onChange={(e) => setSortColumn(e.target.value as SortColumn)}
               >
-                {SORT_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
+                {SORT_COLUMNS.map((column) => (
+                  <option key={column} value={column}>
+                    {t(SORT_LABEL_KEYS[column])}
                   </option>
                 ))}
               </select>
@@ -195,24 +210,28 @@ export const ParametersView = ({ deviceStatus = 'checking' }: ParametersViewProp
                 type="button"
                 className="sort-direction-btn"
                 onClick={toggleSortDirection}
-                title={`Switch to ${sortDirection === 'asc' ? 'descending' : 'ascending'} order`}
+                title={
+                  sortDirection === 'asc'
+                    ? t('parameters.sort.switchToDescending')
+                    : t('parameters.sort.switchToAscending')
+                }
               >
-                {sortDirection === 'asc' ? '↑ Asc' : '↓ Desc'}
+                {sortDirection === 'asc' ? t('parameters.sort.asc') : t('parameters.sort.desc')}
               </button>
             </div>
             <ToggleSwitch
               checked={editMode}
               onChange={setEditMode}
-              label="Edit Mode"
+              label={t('parameters.editMode')}
               size="compact"
               alignLabel="start"
               className={`params-edit-toggle ${editMode ? 'active' : ''}`}
-              title="Enable parameter editing (use with caution)"
+              title={t('parameters.enableEditing')}
             />
             <input
               type="text"
               id="params-search"
-              placeholder="Search parameters..."
+              placeholder={t('parameters.search')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -221,7 +240,7 @@ export const ParametersView = ({ deviceStatus = 'checking' }: ParametersViewProp
         <div className="params-content">
           {sortedParams.length === 0 ? (
             <div className="empty-state">
-              <p>No parameters found</p>
+              <p>{t('parameters.noResults')}</p>
             </div>
           ) : (
             <div className="params-list">
@@ -248,16 +267,25 @@ export const ParametersView = ({ deviceStatus = 'checking' }: ParametersViewProp
                                 {param.category}
                               </span>
                             )}
-                            {param.readonly && <span className="param-badge readonly">readonly</span>}
-                            {param.critical && <span className="param-badge critical">critical</span>}
+                            {param.readonly && (
+                              <span className="param-badge readonly">{t('parameters.badge.readonly')}</span>
+                            )}
+                            {param.critical && (
+                              <span className="param-badge critical">{t('parameters.badge.critical')}</span>
+                            )}
                           </div>
                         </div>
-                        <div className="param-last-modified">Last modified: {formatLastModified(param.last_modified)}</div>
+                        <div className="param-last-modified">
+                          {t('parameters.lastModified', { time: formatLastModified(param.last_modified) })}
+                        </div>
+                        {param.description && (
+                          <p className="param-row__description">{param.description}</p>
+                        )}
                       </div>
                       <div className="param-row__actions">
                         {param.readonly ? (
                           <Button size="small" variant="ghost" className="param-edit-btn" disabled>
-                            Read-Only
+                            {t('parameters.readOnly')}
                           </Button>
                         ) : (
                           <Button
@@ -266,20 +294,20 @@ export const ParametersView = ({ deviceStatus = 'checking' }: ParametersViewProp
                             className="param-edit-btn"
                             onClick={() => handleEdit(param)}
                             disabled={!editMode || param.type === 'bytes'}
-                            title={param.type === 'bytes' ? 'Binary parameters are view-only' : undefined}
+                            title={param.type === 'bytes' ? t('parameters.binaryViewOnly') : undefined}
                           >
-                            Edit
+                            {t('parameters.edit')}
                           </Button>
                         )}
                       </div>
                     </div>
                     <div
                       className="param-row__value"
-                      title="Click to view full value"
+                      title={t('parameters.viewFullValue')}
                       onClick={() => handleViewValue(param)}
                     >
                       <div className="param-row__value-header">
-                        <span className="value-label">Value</span>
+                        <span className="value-label">{t('parameters.value')}</span>
                         <div className="value-pill-group">
                           {typeBadge && <span className="value-pill value-pill--type">{typeBadge}</span>}
                           {attributeBadges.map((attr) => (
@@ -289,24 +317,20 @@ export const ParametersView = ({ deviceStatus = 'checking' }: ParametersViewProp
                             <span className="value-pill">{formatBadge}</span>
                           )}
                           {param.type === 'bytes' && param.byte_length !== undefined && (
-                            <span className="value-pill value-pill--outline">{param.byte_length} bytes</span>
+                            <span className="value-pill value-pill--outline">
+                              {t('parameters.bytes', { count: param.byte_length })}
+                            </span>
                           )}
                         </div>
                       </div>
                       <pre className="value-code-block">
                         <code>{preview}</code>
                       </pre>
-                      <span className="value-footer-hint">Click to inspect full value</span>
+                      <span className="value-footer-hint">{t('parameters.inspectHint')}</span>
                     </div>
-                    {param.description && (
-                      <div className="param-description">
-                        <span className="description-label">Description</span>
-                        <p>{param.description}</p>
-                      </div>
-                    )}
                     {param.critical && (
                       <div className="critical-flag">
-                        <span>⚠️ Critical parameter</span>
+                        <span>⚠️ {t('parameters.criticalFlag')}</span>
                       </div>
                     )}
                   </div>
@@ -320,14 +344,14 @@ export const ParametersView = ({ deviceStatus = 'checking' }: ParametersViewProp
       <Modal
         isOpen={editingParam !== null}
         onClose={() => setEditingParam(null)}
-        title="Edit Parameter"
+        title={t('parameters.editTitle')}
         size="small"
       >
         {editingParam && (
           <div className="edit-param-modal-new">
             <div className="edit-param-header">
               <div className="edit-param-key-section">
-                <span className="param-key-label">Parameter Key</span>
+                <span className="param-key-label">{t('parameters.paramKey')}</span>
                 <code className="param-key-value-edit">{editingParam.key}</code>
               </div>
               <div className="edit-param-type">
@@ -337,14 +361,14 @@ export const ParametersView = ({ deviceStatus = 'checking' }: ParametersViewProp
 
             {editingParam.description && (
               <div className="edit-param-description">
-                <span className="description-label">Description</span>
+                <span className="description-label">{t('parameters.description')}</span>
                 <p>{editingParam.description}</p>
               </div>
             )}
 
             <div className="edit-param-input-section">
               <label htmlFor="edit-param-value" className="input-label">
-                New Value
+                {t('parameters.newValue')}
               </label>
               {editingParam.type && BOOLEAN_TYPES.has(editingParam.type.toLowerCase()) ? (
                 <select
@@ -364,7 +388,7 @@ export const ParametersView = ({ deviceStatus = 'checking' }: ParametersViewProp
                   value={editValue}
                   onChange={(e) => setEditValue(e.target.value)}
                   className="edit-input-new"
-                  placeholder={`Enter ${editingParam.type} value...`}
+                  placeholder={t('parameters.enterValue', { type: editingParam.type ?? '' })}
                   autoFocus
                 />
               )}
@@ -374,18 +398,18 @@ export const ParametersView = ({ deviceStatus = 'checking' }: ParametersViewProp
               <div className="edit-warning-banner">
                 <span className="warning-icon">⚠️</span>
                 <div className="warning-content">
-                  <strong>Caution: Critical Parameter</strong>
-                  <p>Changes to this parameter may affect system stability.</p>
+                  <strong>{t('parameters.criticalWarningTitle')}</strong>
+                  <p>{t('parameters.criticalWarningMsg')}</p>
                 </div>
               </div>
             )}
 
             <div className="modal-actions">
               <Button variant="secondary" onClick={() => setEditingParam(null)}>
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button variant="primary" onClick={handleSave}>
-                Save Changes
+                {t('parameters.saveChanges')}
               </Button>
             </div>
           </div>
@@ -395,19 +419,19 @@ export const ParametersView = ({ deviceStatus = 'checking' }: ParametersViewProp
       <Modal
         isOpen={viewValueModal !== null}
         onClose={() => setViewValueModal(null)}
-        title="Parameter Details"
+        title={t('parameters.detailsTitle')}
         size="large"
       >
         {viewValueModal && (
           <div className="param-modal-simple">
             <div className="param-modal-simple__header">
-              <span className="param-key-label">Parameter Key</span>
+              <span className="param-key-label">{t('parameters.paramKey')}</span>
               <div className="param-key-value-wrapper">
                 <code className="param-key-value">{viewValueModal.key}</code>
                 <button
                   className="icon-btn"
-                  onClick={() => copyToClipboard(viewValueModal.key, 'Key')}
-                  title="Copy key"
+                  onClick={() => copyToClipboard(viewValueModal.key, 'parameters.label.key')}
+                  title={t('parameters.copyKey')}
                 >
                   📋
                 </button>
@@ -426,7 +450,9 @@ export const ParametersView = ({ deviceStatus = 'checking' }: ParametersViewProp
                   <span className="value-pill">{formattedModalValue.formatLabel.toUpperCase()}</span>
                 )}
                 {viewValueModal.type === 'bytes' && viewValueModal.byte_length !== undefined && (
-                  <span className="value-pill value-pill--outline">{viewValueModal.byte_length} bytes</span>
+                  <span className="value-pill value-pill--outline">
+                    {t('parameters.bytes', { count: viewValueModal.byte_length })}
+                  </span>
                 )}
               </div>
               <pre
@@ -443,17 +469,20 @@ export const ParametersView = ({ deviceStatus = 'checking' }: ParametersViewProp
                 variant="secondary"
                 onClick={() => {
                   if (formattedModalValue) {
-                    copyToClipboard(modalCopyValue, 'Value')
+                    copyToClipboard(modalCopyValue, 'parameters.label.value')
                   }
                 }}
               >
-                Copy Value
+                {t('parameters.copyValue')}
               </Button>
-              <Button variant="secondary" onClick={() => copyToClipboard(viewValueModal.key, 'Key')}>
-                Copy Key
+              <Button
+                variant="secondary"
+                onClick={() => copyToClipboard(viewValueModal.key, 'parameters.label.key')}
+              >
+                {t('parameters.copyKey')}
               </Button>
               <Button variant="primary" onClick={() => setViewValueModal(null)}>
-                Close
+                {t('common.close')}
               </Button>
             </div>
           </div>

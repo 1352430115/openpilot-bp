@@ -8,14 +8,28 @@ from .spi import STBootloaderSPIHandle, PandaSpiException
 from .usb import STBootloaderUSBHandle
 from .constants import FW_PATH, McuType
 
+# BluePilot: comma three (C3) internal panda is reached over SPI in bootloader mode
+try:
+  from openpilot.system.hardware import TICI
+except ImportError:
+  TICI = False
+# End BluePilot
+
 
 class PandaDFU:
   def __init__(self, dfu_serial: str | None):
-    # try USB, then SPI
+    # BluePilot: prefer SPI on C3; USB DFU can mis-identify H7 red panda as F4
     handle: BaseSTBootloaderHandle | None
-    self._context, handle = PandaDFU.usb_connect(dfu_serial)
-    if handle is None:
+    self._context = None
+    if TICI:
       self._context, handle = PandaDFU.spi_connect(dfu_serial)
+      if handle is None:
+        self._context, handle = PandaDFU.usb_connect(dfu_serial)
+    else:
+      self._context, handle = PandaDFU.usb_connect(dfu_serial)
+      if handle is None:
+        self._context, handle = PandaDFU.spi_connect(dfu_serial)
+    # End BluePilot
 
     if handle is None:
       raise Exception(f"failed to open DFU device {dfu_serial}")
@@ -125,6 +139,12 @@ class PandaDFU:
 
   def recover(self):
     fn = os.path.join(FW_PATH, self._mcu_type.config.bootstub_fn)
+    # BluePilot: C3 builds ship H7 bootstubs only; USB DFU may select F4 paths
+    if not os.path.isfile(fn) and self._mcu_type == McuType.F4:
+      fn = os.path.join(FW_PATH, McuType.H7.config.bootstub_fn)
+      if os.path.isfile(fn):
+        self._mcu_type = McuType.H7
+    # End BluePilot
     with open(fn, "rb") as f:
       code = f.read()
     self.program_bootstub(code)
@@ -132,6 +152,12 @@ class PandaDFU:
 
   @staticmethod
   def list() -> list[str]:
-    ret = PandaDFU.usb_list()
-    ret += PandaDFU.spi_list()
+    # BluePilot: internal C3 panda is on SPI; list it before USB DFU devices
+    if TICI:
+      ret = PandaDFU.spi_list()
+      ret += PandaDFU.usb_list()
+    else:
+      ret = PandaDFU.usb_list()
+      ret += PandaDFU.spi_list()
+    # End BluePilot
     return list(set(ret))

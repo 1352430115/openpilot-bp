@@ -15,6 +15,8 @@ from typing import Dict, List, Optional, Any, Union, Tuple
 
 logger = logging.getLogger(__name__)
 
+from bluepilot.backend.params.param_descriptions import get_device_language, get_param_description
+
 # Import Params with fallback for direct file reading
 PARAMS_DIR = "/data/params/d"
 USE_DIRECT_FILE_READING = False
@@ -352,8 +354,9 @@ def get_all_params(params: Optional[Params] = None) -> Dict[str, Any]:
         for category_info in PARAM_CATEGORIES.values():
             param_keys.extend(category_info["params"])
 
+    language = get_device_language(params)
     for key in param_keys:
-        result[key] = _build_param_entry(key, params, params_dir)
+        result[key] = _build_param_entry(key, params, params_dir, language)
 
     return result
 
@@ -493,12 +496,20 @@ def set_param_value(key: str, value: Any, params: Optional[Params] = None) -> Di
         }
 
 
-def _build_param_entry(key: str, params: Optional[Params], params_dir: Optional[str] = None) -> Dict[str, Any]:
+def _build_param_entry(
+    key: str,
+    params: Optional[Params],
+    params_dir: Optional[str] = None,
+    language: Optional[str] = None,
+) -> Dict[str, Any]:
     if params is None:
         params = Params()
 
     if params_dir is None:
         params_dir = PARAMS_DIR if os.path.exists(PARAMS_DIR) else None
+
+    if language is None:
+        language = get_device_language(params)
 
     # Get ParamKeyAttributes from params_keys.h
     attributes_cache = _load_param_attributes_cache()
@@ -511,7 +522,8 @@ def _build_param_entry(key: str, params: Optional[Params], params_dir: Optional[
         "critical": key in CRITICAL_PARAMS,
         "type": "unknown",
         "last_modified": _get_param_mtime(params_dir, key),
-        "attributes": param_attributes  # Add ParamKeyAttributes flags
+        "attributes": param_attributes,  # Add ParamKeyAttributes flags
+        "description": get_param_description(key, language),
     }
 
     try:

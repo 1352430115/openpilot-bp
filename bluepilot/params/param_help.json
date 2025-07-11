@@ -1,0 +1,392 @@
+{
+  "FordSelectedVehicleModel": {
+    "en": "Selected Ford vehicle model used for vehicle-specific tuning and features.",
+    "zh-CHS": "所选福特车型，用于车辆专属调校与功能。",
+    "zh-CHT": "所選福特車型，用於車輛專屬調校與功能。"
+  },
+  "FordPrefSendHandsFreeCanMsg": {
+    "en": "Sends CAN messages to show the hands-free (BlueCruise) icon on the gauge cluster for supported vehicles.",
+    "zh-CHS": "向仪表盘发送 CAN 消息，在支持的车辆上显示脱手（BlueCruise）图标。",
+    "zh-CHT": "向儀表板發送 CAN 訊息，在支援的車輛上顯示脫手（BlueCruise）圖示。"
+  },
+  "send_hands_free_cluster_msg": {
+    "en": "Sends CAN messages to show the hands-free (BlueCruise) icon on the gauge cluster for supported vehicles.",
+    "zh-CHS": "向仪表盘发送 CAN 消息，在支持的车辆上显示脱手（BlueCruise）图标。",
+    "zh-CHT": "向儀表板發送 CAN 訊息，在支援的車輛上顯示脫手（BlueCruise）圖示。"
+  },
+  "FordPrefDisableBP_lat_UI": {
+    "en": "When enabled, uses stock openpilot lateral control instead of BluePilot Ford 4-signal lateral control.",
+    "zh-CHS": "启用后使用 openpilot 原厂横向控制，而非 BluePilot 福特四信号横向控制。",
+    "zh-CHT": "啟用後使用 openpilot 原廠橫向控制，而非 BluePilot 福特四信號橫向控制。"
+  },
+  "disable_BP_lat_UI": {
+    "en": "When enabled, uses stock openpilot lateral control instead of BluePilot Ford 4-signal lateral control.",
+    "zh-CHS": "启用后使用 openpilot 原厂横向控制，而非 BluePilot 福特四信号横向控制。",
+    "zh-CHT": "啟用後使用 openpilot 原廠橫向控制，而非 BluePilot 福特四信號橫向控制。"
+  },
+  "FordPrefDisableDownhillCompUI": {
+    "en": "Disables pitch-based brake and throttle compensation on downhill grades.",
+    "zh-CHS": "禁用下坡时基于俯仰角的制动与油门补偿。",
+    "zh-CHT": "禁用下坡時基於俯仰角的制動與油門補償。"
+  },
+  "disable_downhill_comp_UI": {
+    "en": "Disables pitch-based brake and throttle compensation on downhill grades.",
+    "zh-CHS": "禁用下坡时基于俯仰角的制动与油门补偿。",
+    "zh-CHT": "禁用下坡時基於俯仰角的制動與油門補償。"
+  },
+  "FordPrefHumanTurnDetectionEnable": {
+    "en": "Detects driver-initiated steering and temporarily reduces BluePilot lateral intervention for about 3 seconds.",
+    "zh-CHS": "检测驾驶员主动转向，并在约 3 秒内暂时减少 BluePilot 横向干预。",
+    "zh-CHT": "偵測駕駛員主動轉向，並在約 3 秒內暫時減少 BluePilot 橫向干預。"
+  },
+  "enable_human_turn_detection": {
+    "en": "Detects driver-initiated steering and temporarily reduces BluePilot lateral intervention for about 3 seconds.",
+    "zh-CHS": "检测驾驶员主动转向，并在约 3 秒内暂时减少 BluePilot 横向干预。",
+    "zh-CHT": "偵測駕駛員主動轉向，並在約 3 秒內暫時減少 BluePilot 橫向干預。"
+  },
+  "FordPrefLaneDepartCanMsg": {
+    "en": "Sends lane-departure related CAN messages to the vehicle when supported.",
+    "zh-CHS": "在支持时向车辆发送车道偏离相关 CAN 消息。",
+    "zh-CHT": "在支援時向車輛發送車道偏離相關 CAN 訊息。"
+  },
+  "send_lane_depart_can_msg": {
+    "en": "Sends lane-departure related CAN messages to the vehicle when supported.",
+    "zh-CHS": "在支持时向车辆发送车道偏离相关 CAN 消息。",
+    "zh-CHT": "在支援時向車輛發送車道偏離相關 CAN 訊息。"
+  },
+  "FordPrefDriverMonitorCanMsg": {
+    "en": "Sends driver-monitoring status CAN messages to the vehicle when supported.",
+    "zh-CHS": "在支持时向车辆发送驾驶员监测状态 CAN 消息。",
+    "zh-CHT": "在支援時向車輛發送駕駛員監測狀態 CAN 訊息。"
+  },
+  "send_driver_monitor_can_msg": {
+    "en": "Sends driver-monitoring status CAN messages to the vehicle when supported.",
+    "zh-CHS": "在支持时向车辆发送驾驶员监测状态 CAN 消息。",
+    "zh-CHT": "在支援時向車輛發送駕駛員監測狀態 CAN 訊息。"
+  },
+  "FordPrefEnableDebugLogs": {
+    "en": "Enables verbose BluePilot debug logging to the bp_logger log files.",
+    "zh-CHS": "启用 BluePilot 详细调试日志，写入 bp_logger 日志文件。",
+    "zh-CHT": "啟用 BluePilot 詳細除錯日誌，寫入 bp_logger 日誌檔案。"
+  },
+  "FordPrefSupportsHybridDrive": {
+    "en": "Indicates the vehicle supports hybrid/EV powertrain UI features (battery gauge, power flow).",
+    "zh-CHS": "标记车辆支持混动/纯电动力总成 UI 功能（电池表、能量流）。",
+    "zh-CHT": "標記車輛支援混動/純電動力總成 UI 功能（電池表、能量流）。"
+  },
+  "FordPrefHybridBatteryStatus": {
+    "en": "Shows hybrid/EV battery state of charge, voltage, and current on the driving UI.",
+    "zh-CHS": "在驾驶界面显示混动/纯电电池电量、电压与电流。",
+    "zh-CHT": "在駕駛介面顯示混動/純電電池電量、電壓與電流。"
+  },
+  "FordPrefHybridPowerFlow": {
+    "en": "Shows hybrid/EV power flow gauge (throttle demand and regenerative braking).",
+    "zh-CHS": "显示混动/纯电能量流表（油门需求与能量回收）。",
+    "zh-CHT": "顯示混動/純電能量流表（油門需求與能量回收）。"
+  },
+  "FordPrefHybridDriveGaugeSize": {
+    "en": "Size of hybrid battery and power-flow gauges: 1=Small, 2=Large.",
+    "zh-CHS": "混动电池与能量流表尺寸：1=小，2=大。",
+    "zh-CHT": "混動電池與能量流表尺寸：1=小，2=大。"
+  },
+  "FordPrefHybridGaugeStyle": {
+    "en": "Hybrid power-flow style on C3X: flat horizontal bar or arched gauge above the torque bar.",
+    "zh-CHS": "C3X 混动能量流样式：水平条形或扭矩条上方拱形表。",
+    "zh-CHT": "C3X 混動能量流樣式：水平條形或扭力條上方拱形表。"
+  },
+  "FordPrefHybridBatteryOverlay": {
+    "en": "Overlays additional hybrid battery information on the hybrid battery gauge.",
+    "zh-CHS": "在混动电池表上叠加额外电池信息。",
+    "zh-CHT": "在混動電池表上疊加額外電池資訊。"
+  },
+  "FordPrefHideSteerSaturatedAlerts": {
+    "en": "Hides steering-saturated alerts from the onroad UI.",
+    "zh-CHS": "在驾驶界面隐藏转向饱和相关警报。",
+    "zh-CHT": "在駕駛介面隱藏轉向飽和相關警報。"
+  },
+  "BPUseBluepilotAlerts": {
+    "en": "Uses BluePilot pill-style onroad alerts instead of stock alert styling.",
+    "zh-CHS": "使用 BluePilot 胶囊式路载警报，而非原厂样式。",
+    "zh-CHT": "使用 BluePilot 膠囊式路載警報，而非原廠樣式。"
+  },
+  "FordPrefShowAnimatedWheelAngle": {
+    "en": "Animates the steering wheel icon to match the current steering angle.",
+    "zh-CHS": "方向盘图标随当前转向角动画显示。",
+    "zh-CHT": "方向盤圖示隨當前轉向角動畫顯示。"
+  },
+  "FordPrefShowRadarLeadOverlay": {
+    "en": "Shows Ford ACC radar lead chevron with distance, speed, and time-to-lead on the UI.",
+    "zh-CHS": "在界面显示福特 ACC 前车雷达箭头及距离、速度、跟车时距。",
+    "zh-CHT": "在介面顯示福特 ACC 前車雷達箭頭及距離、速度、跟車時距。"
+  },
+  "FordPrefRadarOverlaySize": {
+    "en": "Radar lead overlay size: 0=Small, 1=Medium, 2=Large.",
+    "zh-CHS": "雷达前车叠加层尺寸：0=小，1=中，2=大。",
+    "zh-CHT": "雷達前車疊加層尺寸：0=小，1=中，2=大。"
+  },
+  "FordLatTuningLaneChgFactorHigh": {
+    "en": "High-speed lane-change steering factor (0.5–1.0). Lower values are smoother; too low may cause over-correction.",
+    "zh-CHS": "高速变道转向系数（0.5–1.0）。较低更平滑；过低可能导致过度修正。",
+    "zh-CHT": "高速變道轉向係數（0.5–1.0）。較低更平滑；過低可能導致過度修正。"
+  },
+  "lane_change_factor_high": {
+    "en": "High-speed lane-change steering factor (0.5–1.0). Lower values are smoother; too low may cause over-correction.",
+    "zh-CHS": "高速变道转向系数（0.5–1.0）。较低更平滑；过低可能导致过度修正。",
+    "zh-CHT": "高速變道轉向係數（0.5–1.0）。較低更平滑；過低可能導致過度修正。"
+  },
+  "FordLatTuningPCBlendRatio_high_C": {
+    "en": "Blend ratio of predicted curvature in curves (0.0–1.0). Typical range 0.4–0.6.",
+    "zh-CHS": "弯道预测曲率混合比（0.0–1.0），常用范围 0.4–0.6。",
+    "zh-CHT": "彎道預測曲率混合比（0.0–1.0），常用範圍 0.4–0.6。"
+  },
+  "pc_blend_ratio_high_C_UI": {
+    "en": "Blend ratio of predicted curvature in curves (0.0–1.0). Typical range 0.4–0.6.",
+    "zh-CHS": "弯道预测曲率混合比（0.0–1.0），常用范围 0.4–0.6。",
+    "zh-CHT": "彎道預測曲率混合比（0.0–1.0），常用範圍 0.4–0.6。"
+  },
+  "FordLatTuningPCBlendRatio_low_C": {
+    "en": "Blend ratio of predicted curvature on straights (0.0–1.0). Typical range 0.4–0.6.",
+    "zh-CHS": "直道预测曲率混合比（0.0–1.0），常用范围 0.4–0.6。",
+    "zh-CHT": "直道預測曲率混合比（0.0–1.0），常用範圍 0.4–0.6。"
+  },
+  "pc_blend_ratio_low_C_UI": {
+    "en": "Blend ratio of predicted curvature on straights (0.0–1.0). Typical range 0.4–0.6.",
+    "zh-CHS": "直道预测曲率混合比（0.0–1.0），常用范围 0.4–0.6。",
+    "zh-CHT": "直道預測曲率混合比（0.0–1.0），常用範圍 0.4–0.6。"
+  },
+  "FordLatTuningEnableLanePositioning": {
+    "en": "Enables advanced in-lane positioning (ALP) and related lanefull controls.",
+    "zh-CHS": "启用高级车道内定位（ALP）及相关 lanefull 控制。",
+    "zh-CHT": "啟用進階車道內定位（ALP）及相關 lanefull 控制。"
+  },
+  "enable_lane_positioning": {
+    "en": "Enables advanced in-lane positioning (ALP) and related lanefull controls.",
+    "zh-CHS": "启用高级车道内定位（ALP）及相关 lanefull 控制。",
+    "zh-CHT": "啟用進階車道內定位（ALP）及相關 lanefull 控制。"
+  },
+  "FordLatTuningEnableHighCurvatureMode": {
+    "en": "Uses separate high-curvature lateral tuning profile instead of low-curvature gains only.",
+    "zh-CHS": "使用独立的高曲率横向调校配置，而非仅低曲率增益。",
+    "zh-CHT": "使用獨立的高曲率橫向調校配置，而非僅低曲率增益。"
+  },
+  "enable_high_curvature_mode": {
+    "en": "Uses separate high-curvature lateral tuning profile instead of low-curvature gains only.",
+    "zh-CHS": "使用独立的高曲率横向调校配置，而非仅低曲率增益。",
+    "zh-CHT": "使用獨立的高曲率橫向調校配置，而非僅低曲率增益。"
+  },
+  "FordLatTuningCustomPathOffset": {
+    "en": "In-lane lateral offset in meters (-0.5 left to +0.5 right). Requires lane positioning enabled.",
+    "zh-CHS": "车道内横向偏移（米）：-0.5 左至 +0.5 右。需启用车道定位。",
+    "zh-CHT": "車道內橫向偏移（公尺）：-0.5 左至 +0.5 右。需啟用車道定位。"
+  },
+  "custom_path_offset": {
+    "en": "In-lane lateral offset in meters (-0.5 left to +0.5 right). Requires lane positioning enabled.",
+    "zh-CHS": "车道内横向偏移（米）：-0.5 左至 +0.5 右。需启用车道定位。",
+    "zh-CHT": "車道內橫向偏移（公尺）：-0.5 左至 +0.5 右。需啟用車道定位。"
+  },
+  "FordLatTuningWheelAngleLookupTime": {
+    "en": "Look-ahead time (seconds) for wheel-angle path tracking in Ford lateral control.",
+    "zh-CHS": "福特横向控制中方向盘角度路径跟踪的前瞻时间（秒）。",
+    "zh-CHT": "福特橫向控制中方向盤角度路徑跟蹤的前瞻時間（秒）。"
+  },
+  "wheel_angle_lookup_time": {
+    "en": "Look-ahead time (seconds) for wheel-angle path tracking in Ford lateral control.",
+    "zh-CHS": "福特横向控制中方向盘角度路径跟踪的前瞻时间（秒）。",
+    "zh-CHT": "福特橫向控制中方向盤角度路徑跟蹤的前瞻時間（秒）。"
+  },
+  "FordLatTuningPathOffsetLookupTime": {
+    "en": "Look-ahead time (seconds) for path-offset lateral control signal.",
+    "zh-CHS": "路径偏移横向控制信号的前瞻时间（秒）。",
+    "zh-CHT": "路徑偏移橫向控制訊號的前瞻時間（秒）。"
+  },
+  "path_offset_lookup_time": {
+    "en": "Look-ahead time (seconds) for path-offset lateral control signal.",
+    "zh-CHS": "路径偏移横向控制信号的前瞻时间（秒）。",
+    "zh-CHT": "路徑偏移橫向控制訊號的前瞻時間（秒）。"
+  },
+  "FordLatTuningEnableLanefullMode": {
+    "en": "Enables lanefull mode for lane positioning (legacy SunnyPilot-style behavior).",
+    "zh-CHS": "启用车道定位的 lanefull 模式（类似旧版 SunnyPilot）。",
+    "zh-CHT": "啟用車道定位的 lanefull 模式（類似舊版 SunnyPilot）。"
+  },
+  "enable_lane_full_mode": {
+    "en": "Enables lanefull mode for lane positioning (legacy SunnyPilot-style behavior).",
+    "zh-CHS": "启用车道定位的 lanefull 模式（类似旧版 SunnyPilot）。",
+    "zh-CHT": "啟用車道定位的 lanefull 模式（類似舊版 SunnyPilot）。"
+  },
+  "FordLatTuningTuningCustomProfile": {
+    "en": "Uses custom lateral PID and curvature blend tuning instead of defaults.",
+    "zh-CHS": "使用自定义横向 PID 与曲率混合调校，而非默认值。",
+    "zh-CHT": "使用自訂橫向 PID 與曲率混合調校，而非預設值。"
+  },
+  "custom_profile": {
+    "en": "Uses custom lateral PID and curvature blend tuning instead of defaults.",
+    "zh-CHS": "使用自定义横向 PID 与曲率混合调校，而非默认值。",
+    "zh-CHT": "使用自訂橫向 PID 與曲率混合調校，而非預設值。"
+  },
+  "FordLatTuningLCPIDGainUI": {
+    "en": "Low-curvature lane-positioning PID gain (0.0–5.0). Higher = tighter centering, may feel twitchy.",
+    "zh-CHS": "低曲率车道定位 PID 增益（0.0–5.0）。越高越贴中心，可能显得灵敏。",
+    "zh-CHT": "低曲率車道定位 PID 增益（0.0–5.0）。越高越貼中心，可能顯得靈敏。"
+  },
+  "LC_PID_gain_UI": {
+    "en": "Low-curvature lane-positioning PID gain (0.0–5.0). Higher = tighter centering, may feel twitchy.",
+    "zh-CHS": "低曲率车道定位 PID 增益（0.0–5.0）。越高越贴中心，可能显得灵敏。",
+    "zh-CHT": "低曲率車道定位 PID 增益（0.0–5.0）。越高越貼中心，可能顯得靈敏。"
+  },
+  "FordLatTuningHCPIDGainUI": {
+    "en": "High-curvature lane-positioning PID gain (0.0–5.0). Used in tight curves.",
+    "zh-CHS": "高曲率车道定位 PID 增益（0.0–5.0），用于急弯。",
+    "zh-CHT": "高曲率車道定位 PID 增益（0.0–5.0），用於急彎。"
+  },
+  "HC_PID_gain_UI": {
+    "en": "High-curvature lane-positioning PID gain (0.0–5.0). Used in tight curves.",
+    "zh-CHS": "高曲率车道定位 PID 增益（0.0–5.0），用于急弯。",
+    "zh-CHT": "高曲率車道定位 PID 增益（0.0–5.0），用於急彎。"
+  },
+  "CustomModelPathColor": {
+    "en": "Color scheme for the driving model path overlay on the onroad UI.",
+    "zh-CHS": "路载驾驶界面上模型路径叠加层的配色方案。",
+    "zh-CHT": "路載駕駛介面上模型路徑疊加層的配色方案。"
+  },
+  "ShowGForceMeter": {
+    "en": "Shows a g-force meter indicating current vehicle acceleration and braking.",
+    "zh-CHS": "显示 G 力表，指示当前车辆加减速。",
+    "zh-CHT": "顯示 G 力表，指示當前車輛加減速。"
+  },
+  "BlindSpot": {
+    "en": "Enables blind-spot monitoring warnings on supported hardware (TICI).",
+    "zh-CHS": "在支持的硬件（TICI）上启用盲点监测警告。",
+    "zh-CHT": "在支援的硬體（TICI）上啟用盲點監測警告。"
+  },
+  "ShowBlindspotOverlay": {
+    "en": "Shows red edge overlay when a vehicle is detected in the blind spot.",
+    "zh-CHS": "检测到盲点有车时显示红色边缘叠加。",
+    "zh-CHT": "偵測到盲點有車時顯示紅色邊緣疊加。"
+  },
+  "ShowStopIndicatorOverlay": {
+    "en": "Shows a stop indicator overlay when the vehicle is stopped.",
+    "zh-CHS": "车辆静止时显示停车指示叠加。",
+    "zh-CHT": "車輛靜止時顯示停車指示疊加。"
+  },
+  "FordPrefHevDataAvailable": {
+    "en": "Vehicle reports hybrid/EV drive data on CAN (auto-detected capability flag).",
+    "zh-CHS": "车辆通过 CAN 上报混动/纯电驱动数据（自动检测能力标志）。",
+    "zh-CHT": "車輛透過 CAN 上報混動/純電驅動資料（自動偵測能力標誌）。"
+  },
+  "FordPrefHevBattDataAvailable": {
+    "en": "Vehicle reports hybrid/EV battery data on CAN (auto-detected capability flag).",
+    "zh-CHS": "车辆通过 CAN 上报混动/纯电电池数据（自动检测能力标志）。",
+    "zh-CHT": "車輛透過 CAN 上報混動/純電電池資料（自動偵測能力標誌）。"
+  },
+  "ShowWideCameraAtLowSpeed": {
+    "en": "Switches to the wide road camera view at low speeds.",
+    "zh-CHS": "低速时切换到广角道路摄像头画面。",
+    "zh-CHT": "低速時切換到廣角道路攝影機畫面。"
+  },
+  "ShowBrakeStatus": {
+    "en": "Highlights speed setpoint in red when the vehicle is braking.",
+    "zh-CHS": "制动时将速度设定值高亮为红色。",
+    "zh-CHT": "制動時將速度設定值高亮為紅色。"
+  },
+  "BPLastSeenVersion": {
+    "en": "Last BluePilot version seen by the device (used for update notifications).",
+    "zh-CHS": "设备上次记录的 BluePilot 版本（用于更新提示）。",
+    "zh-CHT": "裝置上次記錄的 BluePilot 版本（用於更新提示）。"
+  },
+  "LaneLineCalibrationRequired": {
+    "en": "Indicates lane-line calibration is required before full lateral features.",
+    "zh-CHS": "表示需完成车道线标定后才能使用完整横向功能。",
+    "zh-CHT": "表示需完成車道線標定後才能使用完整橫向功能。"
+  },
+  "OffroadDisplayTest": {
+    "en": "Development flag for offroad display testing.",
+    "zh-CHS": "用于离路显示测试的开发标志。",
+    "zh-CHT": "用於離路顯示測試的開發標誌。"
+  },
+  "DisableGPSAlert": {
+    "en": "Suppresses GPS-related alerts on the device UI.",
+    "zh-CHS": "在设备界面上抑制 GPS 相关警报。",
+    "zh-CHT": "在裝置介面上抑制 GPS 相關警報。"
+  },
+  "BpDisplayBrightnessTimeout": {
+    "en": "Seconds of inactivity before the display dims while offroad (10–120).",
+    "zh-CHS": "离路时无操作后屏幕变暗的等待时间（10–120 秒）。",
+    "zh-CHT": "離路時無操作後螢幕變暗的等待時間（10–120 秒）。"
+  },
+  "BluepilotShowEnhancedOnroadUI": {
+    "en": "Enables BluePilot enhanced onroad UI layout and renderers.",
+    "zh-CHS": "启用 BluePilot 增强路载 UI 布局与渲染器。",
+    "zh-CHT": "啟用 BluePilot 增強路載 UI 版面與渲染器。"
+  },
+  "BPUiTextSize": {
+    "en": "Onroad UI text size preset: 0=Small, 1=Medium, 2=Large.",
+    "zh-CHS": "路载 UI 文字大小：0=小，1=中，2=大。",
+    "zh-CHT": "路載 UI 文字大小：0=小，1=中，2=大。"
+  },
+  "EnableWebRoutesServer": {
+    "en": "Enables the web routes server for remote route access.",
+    "zh-CHS": "启用 Web 路线服务器以便远程访问路线。",
+    "zh-CHT": "啟用 Web 路線伺服器以便遠端存取路線。"
+  },
+  "BPPortalPort": {
+    "en": "HTTP port for the BluePilot Portal web interface (default 8088).",
+    "zh-CHS": "BluePilot Portal 网页界面 HTTP 端口（默认 8088）。",
+    "zh-CHT": "BluePilot Portal 網頁介面 HTTP 連接埠（預設 8088）。"
+  },
+  "BPPortalCrashCount": {
+    "en": "Number of recorded BluePilot Portal process crashes.",
+    "zh-CHS": "BluePilot Portal 进程崩溃次数记录。",
+    "zh-CHT": "BluePilot Portal 行程崩潰次數記錄。"
+  },
+  "BPPortalLastCrash": {
+    "en": "Unix timestamp of the most recent BluePilot Portal crash.",
+    "zh-CHS": "最近一次 BluePilot Portal 崩溃的 Unix 时间戳。",
+    "zh-CHT": "最近一次 BluePilot Portal 崩潰的 Unix 時間戳。"
+  },
+  "EnableTethering": {
+    "en": "Allows USB/WiFi tethering from the comma device.",
+    "zh-CHS": "允许 comma 设备共享 USB/WiFi 网络热点。",
+    "zh-CHT": "允許 comma 裝置共享 USB/WiFi 網路熱點。"
+  },
+  "WifiFavoriteSSID": {
+    "en": "Preferred WiFi network SSID to connect to automatically when available.",
+    "zh-CHS": "优先自动连接的 WiFi 网络名称（SSID）。",
+    "zh-CHT": "優先自動連線的 WiFi 網路名稱（SSID）。"
+  },
+  "BPHideOnroadBorder": {
+    "en": "Hides the colored engagement border around the onroad driving view.",
+    "zh-CHS": "隐藏路载驾驶视图周围的彩色 engagement 边框。",
+    "zh-CHT": "隱藏路載駕駛檢視周圍的彩色 engagement 邊框。"
+  },
+  "BPShowConfidenceBall": {
+    "en": "Shows the model confidence ball on the left side of the driving view.",
+    "zh-CHS": "在驾驶视图左侧显示模型置信度球。",
+    "zh-CHT": "在駕駛檢視左側顯示模型置信度球。"
+  },
+  "BPAnimateSteeringWheel": {
+    "en": "Rotates the steering wheel icon to match current steering angle.",
+    "zh-CHS": "方向盘图标随当前转向角旋转。",
+    "zh-CHT": "方向盤圖示隨當前轉向角旋轉。"
+  },
+  "BPUIDebugLog": {
+    "en": "Logs UI state transitions for diagnosing on-device rendering issues.",
+    "zh-CHS": "记录 UI 状态切换，用于诊断设备端渲染问题。",
+    "zh-CHT": "記錄 UI 狀態切換，用於診斷裝置端渲染問題。"
+  },
+  "disable_BP_long_UI": {
+    "en": "Uses stock longitudinal control instead of BluePilot lead-aware gas/brake tuning.",
+    "zh-CHS": "使用原厂纵向控制，而非 BluePilot 前车感知油门/制动调校。",
+    "zh-CHT": "使用原廠縱向控制，而非 BluePilot 前車感知油門/制動調校。"
+  },
+  "BlinkerPauseLaneChange": {
+    "en": "Pauses lateral control when the turn signal is on below minimum lane-change speed.",
+    "zh-CHS": "转向灯开启且低于变道最低速度时暂停横向控制。",
+    "zh-CHT": "轉向燈開啟且低於變道最低速度時暫停橫向控制。"
+  },
+  "vbatt_pause_charging": {
+    "en": "12V battery voltage threshold (V) below which the device stops charging to protect the car battery.",
+    "zh-CHS": "12V 电池电压阈值（伏）：低于此值设备停止充电以保护电瓶。",
+    "zh-CHT": "12V 電池電壓閾值（伏）：低於此值裝置停止充電以保護電瓶。"
+  }
+}

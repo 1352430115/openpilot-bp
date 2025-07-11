@@ -14,6 +14,27 @@ from openpilot.system.version import get_build_metadata
 MAX_CACHE_SIZE = 4e9 if "CI" in os.environ else 2e9
 CACHE_DIR = Path("/data/scons_cache" if AGNOS else "/tmp/scons_cache")
 
+# BluePilot: C3 red panda firmware is H7; alias legacy F4 names for DFU recovery
+def ensure_c3_panda_firmware() -> None:
+  if not AGNOS:
+    return
+
+  def _link_h7_aliases(obj: Path) -> None:
+    if not obj.is_dir():
+      return
+    h7_bootstub = obj / "bootstub.panda_h7.bin"
+    f4_bootstub = obj / "bootstub.panda.bin"
+    if h7_bootstub.is_file() and not f4_bootstub.exists():
+      f4_bootstub.symlink_to("bootstub.panda_h7.bin")
+    h7_fw = obj / "panda_h7.bin.signed"
+    f4_fw = obj / "panda.bin.signed"
+    if h7_fw.is_file() and not f4_fw.exists():
+      f4_fw.symlink_to("panda_h7.bin.signed")
+
+  _link_h7_aliases(Path(BASEDIR) / "panda" / "board" / "obj")
+  _link_h7_aliases(Path(BASEDIR) / "panda_tici" / "board" / "obj")
+# End BluePilot
+
 TOTAL_SCONS_NODES = 2705
 MAX_BUILD_PROGRESS = 100
 
@@ -58,6 +79,11 @@ def build(spinner: Spinner, dirty: bool = False, minimal: bool = False) -> None:
 
     if scons.returncode == 0:
       break
+
+  # BluePilot: symlink H7 panda artifacts for C3 DFU recovery after build
+  if scons.returncode == 0:
+    ensure_c3_panda_firmware()
+  # End BluePilot
 
   if scons.returncode != 0:
     # Read remaining output

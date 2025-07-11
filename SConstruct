@@ -222,6 +222,9 @@ Export('messaging')
 
 # Build other submodules
 SConscript(['panda/SConscript'])
+# BluePilot: C3 (F4/DOS) panda firmware tree (hwj dp260513)
+SConscript(['panda_tici/SConscript'])
+# End BluePilot
 
 # Build rednose library
 SConscript(['rednose/SConscript'])

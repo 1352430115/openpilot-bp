@@ -12,9 +12,19 @@
 
 const bool PANDAD_MAXOUT = getenv("PANDAD_MAXOUT") != nullptr;
 
-Panda::Panda(std::string serial) {
-  handle = std::make_unique<PandaSpiHandle>(serial);
-  LOGW("connected to %s over SPI", serial.c_str());
+Panda::Panda(std::string serial, uint32_t bus_offset) : bus_offset(bus_offset) {
+  // try USB first, then SPI
+  try {
+    handle = std::make_unique<PandaUsbHandle>(serial);
+    LOGW("connected to %s over USB", serial.c_str());
+  } catch (std::exception &e) {
+#ifndef __APPLE__
+    handle = std::make_unique<PandaSpiHandle>(serial);
+    LOGW("connected to %s over SPI", serial.c_str());
+#else
+    throw e;
+#endif
+  }
 
   hw_type = get_hw_type();
   can_reset_communications();
@@ -32,8 +42,20 @@ std::string Panda::hw_serial() {
   return handle->hw_serial;
 }
 
-std::vector<std::string> Panda::list() {
-  return PandaSpiHandle::list();
+std::vector<std::string> Panda::list(bool usb_only) {
+  std::vector<std::string> serials = PandaUsbHandle::list();
+
+#ifndef __APPLE__
+  if (!usb_only) {
+    for (const auto &s : PandaSpiHandle::list()) {
+      if (std::find(serials.begin(), serials.end(), s) == serials.end()) {
+        serials.push_back(s);
+      }
+    }
+  }
+#endif
+
+  return serials;
 }
 
 void Panda::set_safety_model(cereal::CarParams::SafetyModel safety_model, uint16_t safety_param) {
@@ -114,9 +136,18 @@ std::optional<std::string> Panda::get_serial() {
 }
 
 bool Panda::up_to_date() {
+  const bool tici_hw = getenv("TICI_HW");
+  const bool tici_tres = getenv("TICI_TRES");
   if (auto fw_sig = get_firmware_version()) {
     for (auto fn : { "panda.bin.signed", "panda_h7.bin.signed" }) {
-      auto content = util::read_file(std::string("../../panda/board/obj/") + fn);
+      // auto content = util::read_file(std::string("../../panda/board/obj/") + fn);
+      // rick - for tici
+      std::string content;
+      if (tici_hw && !tici_tres) {
+        content = util::read_file(std::string("../../panda_tici/board/obj/") + fn);
+      } else {
+        content = util::read_file(std::string("../../panda/board/obj/") + fn);
+      }
       if (content.size() >= fw_sig->size() &&
           memcmp(content.data() + content.size() - fw_sig->size(), fw_sig->data(), fw_sig->size()) == 0) {
         return true;
@@ -173,7 +204,7 @@ void Panda::pack_can_buffer(const capnp::List<cereal::CanData>::Reader &can_data
   for (const auto &cmsg : can_data_list) {
     // check if the message is intended for this panda
     uint8_t bus = cmsg.getSrc();
-    if (bus >= PANDA_BUS_OFFSET) {
+    if (bus < bus_offset || bus >= (bus_offset + PANDA_BUS_OFFSET)) {
       continue;
     }
     auto can_data = cmsg.getDat();
@@ -185,7 +216,7 @@ void Panda::pack_can_buffer(const capnp::List<cereal::CanData>::Reader &can_data
     header.addr = cmsg.getAddress();
     header.extended = (cmsg.getAddress() >= 0x800) ? 1 : 0;
     header.data_len_code = data_len_code;
-    header.bus = bus;
+    header.bus = bus - bus_offset;
     header.checksum = 0;
 
     memcpy(&send_buf[pos], (uint8_t *)&header, sizeof(can_header));
@@ -261,7 +292,7 @@ bool Panda::unpack_can_buffer(uint8_t *data, uint32_t &size, std::vector<can_fra
 
     can_frame &canData = out_vec.emplace_back();
     canData.address = header.addr;
-    canData.src = header.bus;
+    canData.src = header.bus + bus_offset;
     if (header.rejected) {
       canData.src += CAN_REJECTED_BUS_OFFSET;
     }
