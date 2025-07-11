@@ -73,19 +73,28 @@ class ModularAssistiveDrivingSystem:
 
     return False
 
-  # BluePilot: Ford — LKA armed + D + moving + no driver steer override → keep lateral
-  def _ford_lka_lat_hold_active(self, CS: structs.CarState) -> bool:
-    if self.CP.brand != "ford" or not self._ford_lka_user_armed:
-      return False
-    if CS.gearShifter != GearShifter.drive:
-      return False
-    if CS.vEgo < FORD_LKA_LAT_HOLD_MIN_VEGO:
-      return False
+  # BluePilot: Ford LKA armed in D — brake does not drop lateral; only driver steer override pauses
+  def _ford_lka_suppress_brake_pause(self, CS: structs.CarState) -> bool:
+    return (
+      self.CP.brand == "ford"
+      and self._ford_lka_user_armed
+      and CS.gearShifter == GearShifter.drive
+    )
+
+  def _ford_lka_steer_override(self, CS: structs.CarState) -> bool:
     if CS.steeringPressed:
-      return False
+      return True
     if self.events.has(EventName.steerOverride) or self.events.has(EventName.steerDisengage):
+      return True
+    return self.events.contains(ET.OVERRIDE_LATERAL)
+
+  def _ford_lka_lat_hold_active(self, CS: structs.CarState) -> bool:
+    if not self._ford_lka_suppress_brake_pause(CS):
       return False
-    if self.events.contains(ET.OVERRIDE_LATERAL):
+    if self._ford_lka_steer_override(CS):
+      return False
+    # Moving, or braking in D (allow hold through brake / low-speed stops)
+    if CS.vEgo < FORD_LKA_LAT_HOLD_MIN_VEGO and not CS.brakePressed:
       return False
     return True
 
@@ -100,7 +109,10 @@ class ModularAssistiveDrivingSystem:
 
   def should_silent_lkas_enable(self, CS: structs.CarState) -> bool:
     if self.steering_mode_on_brake == MadsSteeringModeOnBrake.PAUSE and self.pedal_pressed_non_gas_pressed(CS):
-      return False
+      # BluePilot: Ford LKA — braking in D does not block re-enable (only steer override pauses)
+      if not self._ford_lka_suppress_brake_pause(CS):
+        return False
+      # End BluePilot
 
     # BluePilot: Ford LKA hold — re-arm lateral from paused despite silent gear events
     if self._ford_lka_lat_hold_active(CS):
@@ -214,7 +226,7 @@ class ModularAssistiveDrivingSystem:
         self.transition_paused_state()
 
       if self.steering_mode_on_brake == MadsSteeringModeOnBrake.PAUSE:
-        if self.pedal_pressed_non_gas_pressed(CS):
+        if self.pedal_pressed_non_gas_pressed(CS) and not self._ford_lka_suppress_brake_pause(CS):
           self.transition_paused_state()
 
       self.events.remove(EventName.preEnableStandstill)
@@ -238,7 +250,7 @@ class ModularAssistiveDrivingSystem:
         # End BluePilot
 
     if self.steering_mode_on_brake == MadsSteeringModeOnBrake.DISENGAGE:
-      if self.pedal_pressed_non_gas_pressed(CS):
+      if self.pedal_pressed_non_gas_pressed(CS) and not self._ford_lka_suppress_brake_pause(CS):
         if self.enabled:
           self.events_sp.add(EventNameSP.lkasDisable)
         else:
@@ -246,6 +258,11 @@ class ModularAssistiveDrivingSystem:
           if self.events_sp.contains(EventNameSP.lkasEnable):
             self.events_sp.remove(EventNameSP.lkasEnable)
             self.events_sp.add(EventNameSP.pedalPressedAlertOnly)
+
+    # BluePilot: Ford LKA — only driver steer override pauses lateral (not brake)
+    if self.CP.brand == "ford" and self._ford_lka_user_armed and self.enabled and self._ford_lka_steer_override(CS):
+      self.transition_paused_state()
+    # End BluePilot
 
     # BluePilot: Ford LKA hold — clear spurious pause events and re-arm lateral from paused
     if ford_lka_hold:

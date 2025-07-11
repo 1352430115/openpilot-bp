@@ -245,10 +245,16 @@ class SelfdriveD(CruiseHelper):
           self.events.add(EventName.pcmEnable)
 
       # Disable on rising edge of accelerator or brake. Also disable on brake when speed > 0
-      if (CS.gasPressed and not self.CS_prev.gasPressed and self.disengage_on_accelerator) or \
+      # BluePilot: Ford with OP engaged — gas uses gasPressedOverride (pause long), not full disengage
+      gas_disengage = (
+        CS.gasPressed and not self.CS_prev.gasPressed and self.disengage_on_accelerator
+        and not (self.CP.brand == 'ford' and self.enabled)
+      )
+      if gas_disengage or \
         (CS.brakePressed and (not self.CS_prev.brakePressed or not CS.standstill)) or \
         (CS.regenBraking and (not self.CS_prev.regenBraking or not CS.standstill)):
         self.events.add(EventName.pedalPressed)
+      # End BluePilot
 
     # Create events for temperature, disk space, and memory
     if self.sm['deviceState'].thermalStatus >= ThermalStatus.red:

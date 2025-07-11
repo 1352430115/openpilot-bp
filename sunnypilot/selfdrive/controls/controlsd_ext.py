@@ -70,7 +70,8 @@ class ControlsExt(ModelStateBase):
     cs = sm['carState']
     if cs.gearShifter != structs.CarState.GearShifter.drive:
       return False
-    if cs.vEgo < 0.5:
+    # BluePilot: allow resume while braking in D; only block when nearly stopped without brake
+    if cs.vEgo < 0.5 and not cs.brakePressed:
       return False
     if self._bp_ford_driver_steering_override(sm):
       return False

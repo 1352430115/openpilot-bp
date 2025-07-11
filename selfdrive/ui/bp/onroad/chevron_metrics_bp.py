@@ -17,12 +17,11 @@ NORMAL_OVER_M = 125.0 * 0.3048    # 125 feet = 38.10 m - revert to bottom
 # BluePilot: Vertical offset for inverted layout (keeps overlay on screen, below HUD/speed)
 INVERTED_TOP_OFFSET = 350
 
-# BluePilot: Lead metric overlay colors (blue text/chevron, transparent background)
-LEAD_METRIC_BLUE = rl.Color(0, 134, 233, 255)
-LEAD_METRIC_BLUE_GLOW = rl.Color(0, 170, 255, 255)
+# BluePilot: Lead metric overlay colors (white text/chevron, no box border)
+LEAD_METRIC_WHITE = rl.Color(255, 255, 255, 255)
 
 class ChevronMetricsBP(ChevronMetrics):
-  """BluePilot ChevronMetrics with horizontal boxed layout and radar/vision colored borders."""
+  """BluePilot ChevronMetrics with horizontal layout, white text/chevron, no box borders."""
 
   def __init__(self):
     super().__init__()
@@ -90,7 +89,7 @@ class ChevronMetricsBP(ChevronMetrics):
 
   def _render_text_lines(self, text_lines: list[str], chevron_x: float, chevron_y: float,
                          sz: float, rect: rl.Rectangle):
-    """Render vertical metric stack in blue with transparent background."""
+    """Render vertical metric stack in white with transparent background."""
     font_size = 40
     line_height = 50
     margin = 20
@@ -104,7 +103,7 @@ class ChevronMetricsBP(ChevronMetrics):
       text_y = max(margin, text_y)
 
     alpha = int(255 * self._lead_status_alpha)
-    text_color = rl.Color(LEAD_METRIC_BLUE.r, LEAD_METRIC_BLUE.g, LEAD_METRIC_BLUE.b, alpha)
+    text_color = rl.Color(LEAD_METRIC_WHITE.r, LEAD_METRIC_WHITE.g, LEAD_METRIC_WHITE.b, alpha)
 
     for i, line in enumerate(text_lines):
       y = int(text_y + (i * line_height))
@@ -125,15 +124,14 @@ class ChevronMetricsBP(ChevronMetrics):
 
     margin = 20
     alpha = int(255 * self._lead_status_alpha)
-    text_color = rl.Color(LEAD_METRIC_BLUE.r, LEAD_METRIC_BLUE.g, LEAD_METRIC_BLUE.b, alpha)
-    border_color = rl.Color(LEAD_METRIC_BLUE.r, LEAD_METRIC_BLUE.g, LEAD_METRIC_BLUE.b, alpha)
-    glow_color = rl.Color(LEAD_METRIC_BLUE_GLOW.r, LEAD_METRIC_BLUE_GLOW.g, LEAD_METRIC_BLUE_GLOW.b, alpha)
+    text_color = rl.Color(LEAD_METRIC_WHITE.r, LEAD_METRIC_WHITE.g, LEAD_METRIC_WHITE.b, alpha)
+    chevron_color = rl.Color(LEAD_METRIC_WHITE.r, LEAD_METRIC_WHITE.g, LEAD_METRIC_WHITE.b, alpha)
 
     chevron_x = lead_vehicle.chevron[1][0]
     chevron_y = lead_vehicle.chevron[1][1]
 
     if self.ford_overlay_enabled and len(text_lines) == 3:
-      # BluePilot: Horizontal layout with transparent background and blue metrics
+      # BluePilot: Horizontal layout with transparent background and white metrics
       scale = self.overlay_scale
       font_size = int(60 * scale)
       padding = int(12 * scale)
@@ -182,9 +180,6 @@ class ChevronMetricsBP(ChevronMetrics):
         box_rect = rl.Rectangle(int(current_x), int(y), box_width, box_height)
         box_rects.append(box_rect)
 
-        # Transparent background with blue outline only
-        rl.draw_rectangle_rounded_lines_ex(box_rect, 0.2, 10, border_thickness, border_color)
-
         text_x = int(current_x + padding)
         text_y_pos = int(y + padding)
         rl.draw_text_ex(self._font, line, rl.Vector2(text_x, text_y_pos), font_size, 0, text_color)
@@ -214,10 +209,10 @@ class ChevronMetricsBP(ChevronMetrics):
       else:
         chevron = lead_vehicle.glow
 
-      # Draw blue chevron arrow (transparent fill, blue outline)
-      rl.draw_line_ex(chevron[0], chevron[1], border_thickness, glow_color)
-      rl.draw_line_ex(chevron[1], chevron[2], border_thickness, glow_color)
-      rl.draw_line_ex(chevron[2], chevron[0], border_thickness, glow_color)
+      # Draw white chevron arrow (outline only, no metric box border)
+      rl.draw_line_ex(chevron[0], chevron[1], border_thickness, chevron_color)
+      rl.draw_line_ex(chevron[1], chevron[2], border_thickness, chevron_color)
+      rl.draw_line_ex(chevron[2], chevron[0], border_thickness, chevron_color)
 
     else:
       # Fall back to base vertical stack rendering
