@@ -49,7 +49,8 @@ def flash_panda(panda_serial: str) -> Panda:
   if not os.path.isfile(fn):
     cloudlog.warning(f"Panda firmware file missing at {fn}, skipping flash...")
     return panda
-  if os.environ.get("TICI_HW") and os.environ.get("TICI_TRES") != "1" and panda.get_type() == Panda.HW_TYPE_DOS:
+  if (os.environ.get("TICI_HW") and os.environ.get("TICI_TRES") != "1" and
+      panda.get_type() == Panda.HW_TYPE_DOS and not panda.bootstub):
     if panda_signature and panda_signature == fw_signature:
       return panda
     cloudlog.warning(f"Panda {panda_serial} is legacy C3 F4/DOS, skipping auto-flash...")
