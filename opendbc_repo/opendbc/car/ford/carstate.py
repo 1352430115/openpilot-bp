@@ -1,3 +1,4 @@
+import numpy as np
 from opendbc.can import CANDefine, CANParser
 from opendbc.car import Bus, create_button_events, structs
 from opendbc.car.common.conversions import Conversions as CV
@@ -45,6 +46,34 @@ class CarState(CarStateBase, MadsCarState, CarStateExt):
     self.params.put_bool("FordPrefHevDataAvailable", True if CP.flags & FordFlags.HEV_CLUSTER_DATA else False)
     self.params.put_bool("FordPrefHevBattDataAvailable", True if CP.flags & FordFlags.HEV_BATTERY_DATA else False)
     self.hev_data_available = CP.flags & FordFlags.HEV_CLUSTER_DATA
+    self.steer_driver_allowance_nm = self._read_steer_driver_allowance_nm()
+    self.steer_pressed_min_count = self._read_steer_pressed_min_count()
+
+  def _read_steer_driver_allowance_nm(self) -> float:
+    """Nm threshold before steeringPressed; lower = more false overrides when hands-off."""
+    default = CarControllerParams.STEER_DRIVER_ALLOWANCE
+    try:
+      val = self.params.get("FordPrefSteerDriverAllowanceNm", return_default=True)
+    except Exception:
+      return default
+    if val is None:
+      return default
+    try:
+      return float(np.clip(float(val), 0.5, 10.0))
+    except (TypeError, ValueError):
+      return default
+
+  def _read_steer_pressed_min_count(self) -> int:
+    try:
+      val = self.params.get("FordPrefSteerDriverPressedFrames", return_default=True)
+    except Exception:
+      return 8
+    if val is None:
+      return 8
+    try:
+      return int(np.clip(int(float(val)), 1, 30))
+    except (TypeError, ValueError):
+      return 8
 
   def update(self, can_parsers) -> tuple[structs.CarState, structs.CarStateSP]:
     cp = can_parsers[Bus.pt]
@@ -99,7 +128,8 @@ class CarState(CarStateBase, MadsCarState, CarStateExt):
     else:
       ret.steeringAngleDeg = cp.vl["SteeringPinion_Data"]["StePinComp_An_Est"]
     ret.steeringTorque = cp.vl["EPAS_INFO"]["SteeringColumnTorque"]
-    ret.steeringPressed = self.update_steering_pressed(abs(ret.steeringTorque) > CarControllerParams.STEER_DRIVER_ALLOWANCE, 5)
+    ret.steeringPressed = self.update_steering_pressed(
+      abs(ret.steeringTorque) > self.steer_driver_allowance_nm, self.steer_pressed_min_count)
     ret.steerFaultTemporary = cp.vl["EPAS_INFO"]["EPAS_Failure"] == 1
     ret.steerFaultPermanent = cp.vl["EPAS_INFO"]["EPAS_Failure"] in (2, 3)
     ret.espDisabled = cp.vl["Cluster_Info1_FD1"]["DrvSlipCtlMde_D_Rq"] != 0  # 0 is default mode

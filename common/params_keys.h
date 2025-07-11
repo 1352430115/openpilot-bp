@@ -303,6 +303,8 @@ inline static std::unordered_map<std::string, ParamKeyAttributes> keys = {
     {"mici_complication", {PERSISTENT | BACKUP, INT, "0"}},
     {"ShowBrakeStatus", {PERSISTENT | BACKUP, BOOL, "0"}},
     {"FordPrefHybridPowerFlowAlternate", {PERSISTENT | BACKUP, BOOL, "0"}},
+    {"FordPrefSteerDriverAllowanceNm", {PERSISTENT | BACKUP, FLOAT, "2.5"}},
+    {"FordPrefSteerDriverPressedFrames", {PERSISTENT | BACKUP, INT, "8"}},
     {"mici_hide_onroad_fade", {PERSISTENT | BACKUP, BOOL, "0"}},
     {"mici_hide_onroad_border", {PERSISTENT | BACKUP, BOOL, "0"}},
     {"BPHideOnroadBorder", {PERSISTENT | BACKUP, BOOL, "0"}},

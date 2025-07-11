@@ -24,7 +24,7 @@ class CarControllerParams:
   BUTTONS_STEP = 5      # Steering_Data_FD1, 10Hz, but send twice as fast
 
   CURVATURE_MAX = 0.02  # Max curvature for steering command, m^-1
-  STEER_DRIVER_ALLOWANCE = 1.0  # Driver intervention threshold, Nm
+  STEER_DRIVER_ALLOWANCE = 2.5  # Driver intervention threshold, Nm (override via FordPrefSteerDriverAllowanceNm)
 
   # ANGLE_RATE_LIMIT_UP = AngleRateLimit(speed_bp=[5, 25], angle_v=[0.0006, 0.0004]) # windup limit
   # ANGLE_RATE_LIMIT_DOWN = AngleRateLimit(speed_bp=[5, 25], angle_v=[0.0006, 0.0006]) # unwind limit

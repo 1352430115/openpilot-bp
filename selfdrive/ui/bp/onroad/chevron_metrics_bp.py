@@ -17,11 +17,9 @@ NORMAL_OVER_M = 125.0 * 0.3048    # 125 feet = 38.10 m - revert to bottom
 # BluePilot: Vertical offset for inverted layout (keeps overlay on screen, below HUD/speed)
 INVERTED_TOP_OFFSET = 350
 
-# BluePilot: Border colors for radar vs vision leads
-LEAD_RADAR_GLOW = rl.Color(0, 134, 233, 255)
-RADAR_BORDER_COLOR_BASE = rl.Color(0, 100, 200, 255)   # Blue for radar
-LEAD_VISION_GLOW = rl.Color(218, 202, 37, 255)
-VISION_BORDER_COLOR_BASE = rl.Color(201, 34, 49, 255)   # Red for vision
+# BluePilot: Lead metric overlay colors (blue text/chevron, transparent background)
+LEAD_METRIC_BLUE = rl.Color(0, 134, 233, 255)
+LEAD_METRIC_BLUE_GLOW = rl.Color(0, 170, 255, 255)
 
 class ChevronMetricsBP(ChevronMetrics):
   """BluePilot ChevronMetrics with horizontal boxed layout and radar/vision colored borders."""
@@ -90,6 +88,35 @@ class ChevronMetricsBP(ChevronMetrics):
     else:
       return ChevronMetrics._build_text_lines(d_rel, v_rel, v_ego)
 
+  def _render_text_lines(self, text_lines: list[str], chevron_x: float, chevron_y: float,
+                         sz: float, rect: rl.Rectangle):
+    """Render vertical metric stack in blue with transparent background."""
+    font_size = 40
+    line_height = 50
+    margin = 20
+
+    text_y = chevron_y + sz + 15
+    total_height = len(text_lines) * line_height
+
+    if text_y + total_height > rect.height - margin:
+      y_max = min(chevron_y, rect.height - margin)
+      text_y = y_max - 15 - total_height
+      text_y = max(margin, text_y)
+
+    alpha = int(255 * self._lead_status_alpha)
+    text_color = rl.Color(LEAD_METRIC_BLUE.r, LEAD_METRIC_BLUE.g, LEAD_METRIC_BLUE.b, alpha)
+
+    for i, line in enumerate(text_lines):
+      y = int(text_y + (i * line_height))
+      if y + line_height > rect.height - margin:
+        break
+
+      text_size = measure_text_cached(self._font, line, font_size, 0)
+      text_width = text_size.x
+      x = int(chevron_x - text_width / 2)
+      x = int(np.clip(x, margin, rect.width - text_width - margin))
+      rl.draw_text_ex(self._font, line, rl.Vector2(x, y), font_size, 0, text_color)
+
   def _render_text_lines_bp(self, text_lines: list[str], lead_vehicle,
                             sz: float, rect: rl.Rectangle, is_radar: bool, inverted: bool = False):
     """Render text lines with horizontal boxed layout when Ford overlay is active.
@@ -98,19 +125,19 @@ class ChevronMetricsBP(ChevronMetrics):
 
     margin = 20
     alpha = int(255 * self._lead_status_alpha)
-    text_color = rl.Color(255, 255, 255, alpha)
-    shadow_color = rl.Color(0, 0, 0, int(200 * self._lead_status_alpha))
+    text_color = rl.Color(LEAD_METRIC_BLUE.r, LEAD_METRIC_BLUE.g, LEAD_METRIC_BLUE.b, alpha)
+    border_color = rl.Color(LEAD_METRIC_BLUE.r, LEAD_METRIC_BLUE.g, LEAD_METRIC_BLUE.b, alpha)
+    glow_color = rl.Color(LEAD_METRIC_BLUE_GLOW.r, LEAD_METRIC_BLUE_GLOW.g, LEAD_METRIC_BLUE_GLOW.b, alpha)
+
+    chevron_x = lead_vehicle.chevron[1][0]
+    chevron_y = lead_vehicle.chevron[1][1]
 
     if self.ford_overlay_enabled and len(text_lines) == 3:
-      # BluePilot: Horizontal boxed layout with colored borders, scaled by overlay size
+      # BluePilot: Horizontal layout with transparent background and blue metrics
       scale = self.overlay_scale
       font_size = int(60 * scale)
       padding = int(12 * scale)
       box_spacing = int(15 * scale)
-      box_color = rl.Color(40, 40, 40, int(220 * self._lead_status_alpha))
-
-      chevron_x = lead_vehicle.chevron[1][0]
-      chevron_y = lead_vehicle.chevron[1][1]
 
       # Measure all text sizes
       text_sizes = []
@@ -146,35 +173,20 @@ class ChevronMetricsBP(ChevronMetrics):
       else:
         y = chevron_y + CHEVRON_H
 
-      # Border color: blue for radar, red for vision
-      if is_radar:
-        glow_color = LEAD_RADAR_GLOW
-        border_color = rl.Color(RADAR_BORDER_COLOR_BASE.r, RADAR_BORDER_COLOR_BASE.g,
-                                RADAR_BORDER_COLOR_BASE.b, alpha)
-      else:
-        glow_color = LEAD_VISION_GLOW
-        border_color = rl.Color(VISION_BORDER_COLOR_BASE.r, VISION_BORDER_COLOR_BASE.g,
-                                VISION_BORDER_COLOR_BASE.b, alpha)
-
       border_thickness = max(2, int(6 * scale))
 
       box_rects = []
       for line, text_size in zip(text_lines, text_sizes):
         box_width = text_size.x + (padding * 2)
 
-        # Dark grey box
         box_rect = rl.Rectangle(int(current_x), int(y), box_width, box_height)
         box_rects.append(box_rect)
-        rl.draw_rectangle_rounded(box_rect, 0.2, 10, box_color)
 
-        # Colored border (drawn on same rect so there's no gap)
+        # Transparent background with blue outline only
         rl.draw_rectangle_rounded_lines_ex(box_rect, 0.2, 10, border_thickness, border_color)
 
-        # Text centered in box
         text_x = int(current_x + padding)
         text_y_pos = int(y + padding)
-
-        rl.draw_text_ex(self._font, line, rl.Vector2(text_x + 2, text_y_pos + 2), font_size, 0, shadow_color)
         rl.draw_text_ex(self._font, line, rl.Vector2(text_x, text_y_pos), font_size, 0, text_color)
 
         current_x += box_width + box_spacing
@@ -202,15 +214,10 @@ class ChevronMetricsBP(ChevronMetrics):
       else:
         chevron = lead_vehicle.glow
 
-      # Draw modified chevron
-      rl.draw_triangle_fan(chevron, len(chevron), border_color)
+      # Draw blue chevron arrow (transparent fill, blue outline)
       rl.draw_line_ex(chevron[0], chevron[1], border_thickness, glow_color)
       rl.draw_line_ex(chevron[1], chevron[2], border_thickness, glow_color)
       rl.draw_line_ex(chevron[2], chevron[0], border_thickness, glow_color)
-      r = border_thickness / 2
-      rl.draw_circle_v(chevron[0], r, glow_color)
-      rl.draw_circle_v(chevron[1], r, glow_color)
-      rl.draw_circle_v(chevron[2], r, glow_color)
 
     else:
       # Fall back to base vertical stack rendering

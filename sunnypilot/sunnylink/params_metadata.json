@@ -1408,6 +1408,14 @@
       {"value": 1, "label": "Round"}
     ]
   },
+  "FordPrefSteerDriverAllowanceNm": {
+    "title": "BluePilot: Steering Driver Torque Threshold (Ford)",
+    "description": "Steering column torque (Nm) above this counts as driver hands on wheel (steeringPressed). Stock was 1.0 Nm; raise if hands-off still shows gray override border. Requires restart of card/OP."
+  },
+  "FordPrefSteerDriverPressedFrames": {
+    "title": "BluePilot: Steering Pressed Debounce Frames (Ford)",
+    "description": "Consecutive frames over the torque threshold before steeringPressed is true. Higher = less sensitive to brief torque spikes."
+  },
   "ShowBrakeStatus": {
     "title": "BluePilot: Show Brake Light Status",
     "description": "Displays Brake light indication"

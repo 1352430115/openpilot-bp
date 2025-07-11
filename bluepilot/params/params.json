@@ -45,6 +45,26 @@
       "enabled": true
     },
     {
+      "name": "FordPrefSteerDriverAllowanceNm",
+      "default": 2.5,
+      "min": 0.5,
+      "max": 10.0,
+      "type": "float",
+      "flags": ["PERSISTENT", "BACKUP"],
+      "create_default": true,
+      "enabled": true
+    },
+    {
+      "name": "FordPrefSteerDriverPressedFrames",
+      "default": 8,
+      "min": 1,
+      "max": 30,
+      "type": "int",
+      "flags": ["PERSISTENT", "BACKUP"],
+      "create_default": true,
+      "enabled": true
+    },
+    {
       "name": "FordPrefLaneDepartCanMsg",
       "default": false,
       "type": "bool",

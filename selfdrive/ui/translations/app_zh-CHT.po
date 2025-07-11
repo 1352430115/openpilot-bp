@@ -1695,12 +1695,12 @@ msgstr "注意：通过 UEM 啟用横向控制後，将保持啟用直至按 MAD
 #: ../pythonpath/openpilot/selfdrive/ui/sunnypilot/layouts/settings/steering_sub_layouts/lane_change_settings.py:41
 #, python-format
 msgid "Nudge"
-msgstr "微调"
+msgstr "輕推"
 
 #: ../pythonpath/openpilot/selfdrive/ui/sunnypilot/layouts/settings/steering_sub_layouts/lane_change_settings.py:42
 #, python-format
 msgid "Nudgeless"
-msgstr "无微调"
+msgstr "立即"
 
 #: ../pythonpath/openpilot/selfdrive/ui/layouts/sidebar.py:76
 #: ../pythonpath/openpilot/selfdrive/ui/layouts/sidebar.py:138
