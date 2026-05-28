@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useWebSocketStore } from '@/stores/useWebSocketStore'
 import { Icon } from '@/components/common'
+import { useTranslation } from '@/i18n'
 import type { DeviceStatus } from '@/types'
 import './Header.css'
 
@@ -19,28 +20,29 @@ export const Header = ({
   const navigate = useNavigate()
   const location = useLocation()
   const { connected } = useWebSocketStore()
+  const { t } = useTranslation()
   const isHome = location.pathname === '/'
   const isRoutesPage = location.pathname.startsWith('/routes')
   const headerRef = useRef<HTMLElement | null>(null)
 
   const getTitle = () => {
-    if (location.pathname === '/') return 'BluePilot'
-    if (isRoutesPage) return 'Routes'
-    if (location.pathname.startsWith('/parameters')) return 'Parameters'
-    if (location.pathname.startsWith('/logs')) return 'System Logs'
-    if (location.pathname.startsWith('/settings')) return 'Settings'
-    return 'BluePilot'
+    if (location.pathname === '/') return t('header.bluepilot')
+    if (isRoutesPage) return t('header.routes')
+    if (location.pathname.startsWith('/parameters')) return t('header.parameters')
+    if (location.pathname.startsWith('/logs')) return t('header.systemLogs')
+    if (location.pathname.startsWith('/settings')) return t('header.settings')
+    return t('header.bluepilot')
   }
 
   const isParametersPage = location.pathname.startsWith('/parameters')
   const isLogsPage = location.pathname.startsWith('/logs')
 
   const statusTexts: Record<DeviceStatus, string> = {
-    online: 'Online',
-    onroad: 'Onroad',
-    offline: 'Offline',
-    'no-network': 'No Network',
-    checking: 'Checking...',
+    online: t('status.online'),
+    onroad: t('status.onroad'),
+    offline: t('status.offline'),
+    'no-network': t('status.noNetwork'),
+    checking: t('status.checking'),
   }
 
   useLayoutEffect(() => {
@@ -65,7 +67,7 @@ export const Header = ({
         <button
           className="icon-btn home-btn"
           onClick={() => navigate('/')}
-          title="Home"
+          title={t('header.home')}
           type="button"
         >
           <Icon name="home" size={24} />
@@ -76,7 +78,7 @@ export const Header = ({
         {subtitle && <p className="header-subtitle">{subtitle}</p>}
       </div>
       <div className="header-stats">
-        <div className={`device-status ${deviceStatus} ${connected ? 'websocket-active' : ''}`} title="Device status">
+        <div className={`device-status ${deviceStatus} ${connected ? 'websocket-active' : ''}`} title={t('header.deviceStatus')}>
           <span className="status-indicator"></span>
           <span id="status-text">{statusTexts[deviceStatus]}</span>
           {connected && (
@@ -89,7 +91,7 @@ export const Header = ({
           <button
             type="button"
             className="icon-btn"
-            title="Parameters"
+            title={t('header.parameters')}
             onClick={() => navigate('/parameters')}
           >
             <Icon name="tune" size={24} />
@@ -99,7 +101,7 @@ export const Header = ({
           <button
             type="button"
             className="icon-btn"
-            title="System Logs"
+            title={t('header.systemLogs')}
             onClick={() => navigate('/logs')}
           >
             <Icon name="description" size={24} />
@@ -110,7 +112,7 @@ export const Header = ({
             id="header-metrics-btn"
             type="button"
             className="icon-btn"
-            title="System metrics"
+            title={t('header.systemMetrics')}
             onClick={onMetricsClick}
           >
             <Icon name="bar_chart" size={24} />

@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 from itertools import chain
 import os
+import subprocess
+import sys
 from openpilot.common.basedir import BASEDIR
 from openpilot.system.ui.lib.multilang import SYSTEM_UI_DIR, UI_DIR, TRANSLATIONS_DIR, multilang
 from openpilot.selfdrive.ui.translations.potools import extract_strings, generate_pot, merge_po, init_po
@@ -11,10 +13,15 @@ POT_FILE = os.path.join(str(TRANSLATIONS_DIR), "app.pot")
 
 def update_translations():
   files = []
-  for root, _, filenames in chain(os.walk(SYSTEM_UI_DIR),
-                                  os.walk(os.path.join(UI_DIR, "widgets")),
-                                  os.walk(os.path.join(UI_DIR, "layouts")),
-                                  os.walk(os.path.join(UI_DIR, "onroad"))):
+  ui_roots = [
+    SYSTEM_UI_DIR,
+    os.path.join(UI_DIR, "widgets"),
+    os.path.join(UI_DIR, "layouts"),
+    os.path.join(UI_DIR, "onroad"),
+    os.path.join(UI_DIR, "bp"),
+    os.path.join(UI_DIR, "sunnypilot"),
+  ]
+  for root, _, filenames in chain(*(os.walk(p) for p in ui_roots)):
     for filename in filenames:
       if filename.endswith(".py"):
         files.append(os.path.relpath(os.path.join(root, filename), BASEDIR))
@@ -32,5 +39,12 @@ def update_translations():
       init_po(POT_FILE, po_file, name)
 
 
+def update_fonts() -> None:
+  """Regenerate unifont/Inter atlases so new translation glyphs render (not '?')."""
+  font_script = os.path.join(BASEDIR, "selfdrive", "assets", "fonts", "process.py")
+  subprocess.run([sys.executable, font_script], cwd=BASEDIR, check=True)
+
+
 if __name__ == "__main__":
   update_translations()
+  update_fonts()

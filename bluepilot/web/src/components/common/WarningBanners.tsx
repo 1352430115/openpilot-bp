@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { Icon } from './Icon'
+import { useTranslation } from '@/i18n'
 import './WarningBanners.css'
 
 export const WarningBanners = () => {
+  const { t } = useTranslation()
   const [showCellular, setShowCellular] = useState(false)
   const [showFirefox, setShowFirefox] = useState(false)
 
@@ -28,10 +30,10 @@ export const WarningBanners = () => {
           <div className="cellular-warning-content">
             <Icon name="warning" size={24} />
             <div className="cellular-warning-text">
-              <strong>Cellular Access Enabled</strong>
-              <span>Server accessible over cellular network</span>
+              <strong>{t('banner.cellularTitle')}</strong>
+              <span>{t('banner.cellularMsg')}</span>
             </div>
-            <button className="cellular-warning-close" onClick={() => setShowCellular(false)} title="Dismiss">
+            <button className="cellular-warning-close" onClick={() => setShowCellular(false)} title={t('banner.dismiss')}>
               <Icon name="close" size={20} />
             </button>
           </div>
@@ -43,13 +45,10 @@ export const WarningBanners = () => {
           <div className="firefox-warning-content">
             <Icon name="info" size={24} />
             <div className="firefox-warning-text">
-              <strong>Limited Functionality on Firefox</strong>
-              <span>
-                HEVC video playback is not supported. Only the LQ (H.264) camera will be available for route viewing. For
-                full functionality, please use Safari, Chrome, or Edge.
-              </span>
+              <strong>{t('banner.firefoxTitle')}</strong>
+              <span>{t('banner.firefoxMsg')}</span>
             </div>
-            <button className="firefox-warning-close" onClick={() => setShowFirefox(false)} title="Dismiss">
+            <button className="firefox-warning-close" onClick={() => setShowFirefox(false)} title={t('banner.dismiss')}>
               <Icon name="close" size={20} />
             </button>
           </div>

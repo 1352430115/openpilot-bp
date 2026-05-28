@@ -37,6 +37,18 @@ export default defineConfig({
             },
           },
           {
+            // Cache locale files at runtime
+            urlPattern: /\/locales\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'locale-cache',
+              expiration: {
+                maxEntries: 20,
+                maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
+              },
+            },
+          },
+          {
             // Cache icons at runtime
             urlPattern: /\/icons\/.*/i,
             handler: 'CacheFirst',

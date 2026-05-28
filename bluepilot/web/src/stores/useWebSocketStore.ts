@@ -73,6 +73,9 @@ export const useWebSocketStore = create<WebSocketState>((set) => {
             if (paramsStore.params[key]) {
               paramsStore.params[key].value = value as string | number | boolean
             }
+            if (key === 'LanguageSetting') {
+              window.dispatchEvent(new CustomEvent('bp-language-changed', { detail: { key } }))
+            }
           }
           break
 

@@ -1122,6 +1122,15 @@ class WebRoutesHandler(BaseHTTPRequestHandler):
                         logger.debug(f"Error reading SunnyPilot version: {e}")
                         device_info['sp_version'] = None
 
+                    # BluePilot: expose UI language for web portal i18n
+                    try:
+                        from bluepilot.backend.utils.language import get_device_language
+                        device_info['language'] = get_device_language(params)
+                    except Exception as e:
+                        logger.debug(f"Error getting LanguageSetting: {e}")
+                        device_info['language'] = 'en'
+                    # End BluePilot
+
                     self.send_json_response(device_info)
                 except Exception as e:
                     logger.error(f"Error getting device info: {e}", exc_info=True)

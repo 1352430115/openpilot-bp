@@ -16,6 +16,7 @@ from openpilot.system.ui.lib.application import FontWeight, gui_app
 from openpilot.system.ui.lib.text_measure import measure_text_cached
 from openpilot.system.ui.widgets import Widget
 from opendbc.car.ford.helpers import get_hev_engine_on_reason_text, get_hev_power_flow_text
+from openpilot.system.ui.lib.multilang import tr
 from openpilot.selfdrive.ui.bp.lib.ui_debug_logger import bp_ui_log
 
 # --- Size presets (width_ratio, height) for each gauge_scale ---
@@ -450,13 +451,15 @@ class PowerFlowGauge(Widget):
     if not power_flow_text and not engine_reason_text:
       return
 
-    # Combine text
-    if power_flow_text and engine_reason_text:
-      combined = f"{power_flow_text}  |  {engine_reason_text}"
-    elif power_flow_text:
-      combined = power_flow_text
+    # Combine text (translate for display; helpers stay English for mode checks)
+    display_power = tr(power_flow_text) if power_flow_text else ""
+    display_engine = tr(engine_reason_text) if engine_reason_text else ""
+    if display_power and display_engine:
+      combined = f"{display_power}  |  {display_engine}"
+    elif display_power:
+      combined = display_power
     else:
-      combined = engine_reason_text
+      combined = display_engine
 
     # Shrink font if text exceeds available width
     max_width = rect.width - 20

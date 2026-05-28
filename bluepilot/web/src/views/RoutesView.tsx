@@ -6,6 +6,7 @@ import { LoadingSpinner, ConfirmDialog, Icon, BackToTop } from '@/components/com
 import { VideoPlayer } from '@/components/video/VideoPlayer'
 import { DiskSpaceVisualization } from '@/components/storage/DiskSpaceVisualization'
 import { MetricsModal, RouteDownloadModal } from '@/components/modals'
+import { useTranslation } from '@/i18n'
 import type { Route, RouteDetails, DeviceStatus } from '@/types'
 import './RoutesView.css'
 
@@ -14,6 +15,7 @@ interface RoutesViewProps {
 }
 
 export const RoutesView = ({ deviceStatus = 'checking' }: RoutesViewProps) => {
+  const { t } = useTranslation()
   const { routes, loading, fetchRoutes, fetchRouteDetails, preserveRoute, deleteRoute } = useRoutesStore()
   const { addToast } = useToastStore()
   const [selectedRoute, setSelectedRoute] = useState<RouteDetails | null>(null)
@@ -53,10 +55,10 @@ export const RoutesView = ({ deviceStatus = 'checking' }: RoutesViewProps) => {
       // If not preserved, preserve without confirmation
       try {
         await preserveRoute(baseName)
-        addToast('Route preserved successfully', 'success')
+        addToast(t('routes.preservedSuccess'), 'success')
       } catch (error: any) {
         console.error('Failed to preserve route:', error)
-        addToast(error?.message || 'Failed to preserve route', 'error')
+        addToast(error?.message || t('routes.preserveFailed'), 'error')
       }
     }
   }
@@ -66,10 +68,10 @@ export const RoutesView = ({ deviceStatus = 'checking' }: RoutesViewProps) => {
 
     try {
       await preserveRoute(pendingActionRoute)
-      addToast('Route unpreserved successfully', 'success')
+      addToast(t('routes.unpreservedSuccess'), 'success')
     } catch (error: any) {
       console.error('Failed to unpreserve route:', error)
-      addToast(error?.message || 'Failed to unpreserve route', 'error')
+      addToast(error?.message || t('routes.unpreserveFailed'), 'error')
     } finally {
       setPendingActionRoute(null)
     }
@@ -95,10 +97,10 @@ export const RoutesView = ({ deviceStatus = 'checking' }: RoutesViewProps) => {
 
     try {
       await deleteRoute(pendingActionRoute)
-      addToast('Route deleted successfully', 'success')
+      addToast(t('routes.deletedSuccess'), 'success')
     } catch (error: any) {
       console.error('Failed to delete route:', error)
-      addToast(error?.message || 'Failed to delete route', 'error')
+      addToast(error?.message || t('routes.deleteFailed'), 'error')
     } finally {
       setPendingActionRoute(null)
     }
@@ -252,7 +254,7 @@ export const RoutesView = ({ deviceStatus = 'checking' }: RoutesViewProps) => {
       <>
         <Header deviceStatus={deviceStatus} />
         <div className="loading">
-          <LoadingSpinner size="large" message="Loading routes..." />
+          <LoadingSpinner size="large" message={t('routes.loading')} />
         </div>
       </>
     )
@@ -262,11 +264,11 @@ export const RoutesView = ({ deviceStatus = 'checking' }: RoutesViewProps) => {
   if (deviceStatus === 'onroad') {
     return (
       <>
-        <Header deviceStatus={deviceStatus} subtitle="Routes unavailable while driving" />
+        <Header deviceStatus={deviceStatus} subtitle={t('routes.unavailableSubtitle')} />
         <div className="routes-blocked">
           <Icon name="directions_car" size={80} />
-          <h2>Routes Unavailable</h2>
-          <p>Route browsing is disabled while driving for safety. Please return when parked.</p>
+          <h2>{t('routes.unavailableTitle')}</h2>
+          <p>{t('routes.unavailableMsg')}</p>
         </div>
       </>
     )
@@ -277,7 +279,7 @@ export const RoutesView = ({ deviceStatus = 'checking' }: RoutesViewProps) => {
       <Header
         deviceStatus={deviceStatus}
         onMetricsClick={() => setShowMetricsModal(true)}
-        subtitle="Browse and review your driving recordings"
+        subtitle={t('routes.subtitle')}
       />
       <MetricsModal isOpen={showMetricsModal} onClose={() => setShowMetricsModal(false)} />
       <RouteDownloadModal
@@ -295,10 +297,10 @@ export const RoutesView = ({ deviceStatus = 'checking' }: RoutesViewProps) => {
           setPendingActionRoute(null)
         }}
         onConfirm={handleConfirmDelete}
-        title="Delete Route"
-        message="Are you sure you want to delete this route? This action cannot be undone and all video files and logs will be permanently removed."
-        confirmText="Delete"
-        cancelText="Cancel"
+        title={t('routes.deleteRoute')}
+        message={t('routes.deleteConfirmMsg')}
+        confirmText={t('common.delete')}
+        cancelText={t('common.cancel')}
         variant="danger"
       />
       <ConfirmDialog
@@ -308,10 +310,10 @@ export const RoutesView = ({ deviceStatus = 'checking' }: RoutesViewProps) => {
           setPendingActionRoute(null)
         }}
         onConfirm={handleConfirmUnpreserve}
-        title="Unpreserve Route"
-        message="Are you sure you want to unpreserve this route? The route may be automatically deleted when disk space is needed."
-        confirmText="Unpreserve"
-        cancelText="Cancel"
+        title={t('routes.unpreserveRoute')}
+        message={t('routes.unpreserveConfirmMsg')}
+        confirmText={t('common.unpreserve')}
+        cancelText={t('common.cancel')}
         variant="warning"
       />
       {selectedRoute && (
@@ -322,10 +324,8 @@ export const RoutesView = ({ deviceStatus = 'checking' }: RoutesViewProps) => {
         {routes.length === 0 ? (
           <div className="empty">
             <Icon name="home" size={120} />
-            <h2>No Routes Found</h2>
-            <p>
-              No driving routes available yet. Start driving to see your routes here.
-            </p>
+            <h2>{t('routes.noRoutes')}</h2>
+            <p>{t('routes.noRoutesMsg')}</p>
           </div>
         ) : (
           <>
@@ -470,7 +470,7 @@ export const RoutesView = ({ deviceStatus = 'checking' }: RoutesViewProps) => {
                             <button
                               type="button"
                               className="route-export-btn"
-                              title="Export videos and logs"
+                              title={t('routes.exportVideos')}
                               onClick={(e) => handleExportClick(e, baseName)}
                             >
                               <Icon name="download" size={14} />
@@ -479,7 +479,7 @@ export const RoutesView = ({ deviceStatus = 'checking' }: RoutesViewProps) => {
                             <button
                               type="button"
                               className="route-delete-btn"
-                              title="Delete route"
+                              title={t('routes.deleteRouteTitle')}
                               onClick={(e) => handleDeleteClick(e, baseName)}
                             >
                               <Icon name="delete" size={16} />

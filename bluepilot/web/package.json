@@ -6,7 +6,8 @@
   "description": "BluePilot Web Interface - React Frontend",
   "scripts": {
     "dev": "vite",
-    "build": "npm run clean:assets && tsc && vite build",
+    "locales": "python3 scripts/generate_locales.py",
+    "build": "npm run locales && npm run clean:assets && tsc && vite build",
     "build:no-clean": "tsc && vite build",
     "clean:assets": "rm -rf public/assets public/sw.js public/workbox-*.js public/registerSW.js public/manifest.webmanifest",
     "clean": "rm -rf public/assets public/index.html public/sw.js public/workbox-*.js public/registerSW.js public/manifest.webmanifest",

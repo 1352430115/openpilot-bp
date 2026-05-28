@@ -13,6 +13,7 @@ from openpilot.system.ui.widgets import Widget
 from openpilot.selfdrive.ui.mici.onroad.torque_bar import arc_bar_pts
 from openpilot.system.ui.lib.shader_polygon import draw_polygon
 from opendbc.car.ford.helpers import get_hev_power_flow_text, get_hev_engine_on_reason_text
+from openpilot.system.ui.lib.multilang import tr
 
 # Constants
 POWERFLOW_ANGLE_SPAN = 15.0  # Slightly longer than torque bar (12.7 degrees)
@@ -243,8 +244,8 @@ class PowerflowGaugeArched(Widget):
     try:
       s = self._scale
       font_size = int(POWERFLOW_TEXT_FONT_SIZE * s)
-      engine_reason_text = get_hev_engine_on_reason_text(getattr(self, '_engine_on_reason_value', 0))
-      power_flow_text = get_hev_power_flow_text(getattr(self, '_power_flow_mode_value', 0))
+      engine_reason_text = tr(get_hev_engine_on_reason_text(getattr(self, '_engine_on_reason_value', 0)))
+      power_flow_text = tr(get_hev_power_flow_text(getattr(self, '_power_flow_mode_value', 0)))
       if not engine_reason_text and not power_flow_text:
         return
       text_radius = mid_r + (POWERFLOW_LINE_HEIGHT * s) / 2 - POWERFLOW_TEXT_Y_OFFSET * s

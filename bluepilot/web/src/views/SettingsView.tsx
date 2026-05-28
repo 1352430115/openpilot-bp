@@ -13,6 +13,7 @@ import { usePanelsStore } from '@/stores/usePanelsStore'
 import { usePanelStateStore } from '@/stores/usePanelStateStore'
 import { useParamsStore } from '@/stores/useParamsStore'
 import { useUnsavedChangesWarning } from '@/hooks/useUnsavedChangesWarning'
+import { useTranslation } from '@/i18n'
 import type { DeviceStatus } from '@/types'
 import './SettingsView.css'
 
@@ -52,6 +53,7 @@ const getPanelIcon = (panelId?: string) => {
 }
 
 export function SettingsView({ deviceStatus: _deviceStatus }: SettingsViewProps) {
+  const { t } = useTranslation()
   const { panels, loadedPanels, loading, error, fetchPanels, fetchPanel } = usePanelsStore()
   const { state, fetchState } = usePanelStateStore()
   const { fetchParams } = useParamsStore()
@@ -228,7 +230,7 @@ export function SettingsView({ deviceStatus: _deviceStatus }: SettingsViewProps)
   if (loading && panels.length === 0) {
     return (
       <>
-        <Header deviceStatus={_deviceStatus} subtitle="Configure BluePilot settings and behavior" />
+        <Header deviceStatus={_deviceStatus} subtitle={t('settings.subtitle')} />
         <div className="settings-view settings-view-centered">
           <LoadingSpinner message="Loading settings..." />
         </div>
@@ -239,7 +241,7 @@ export function SettingsView({ deviceStatus: _deviceStatus }: SettingsViewProps)
   if (error) {
     return (
       <>
-        <Header deviceStatus={_deviceStatus} subtitle="Configure BluePilot settings and behavior" />
+        <Header deviceStatus={_deviceStatus} subtitle={t('settings.subtitle')} />
         <div className="settings-view settings-view-centered">
           <div className="settings-error-card">
             <h2>Error Loading Settings</h2>
@@ -268,7 +270,7 @@ export function SettingsView({ deviceStatus: _deviceStatus }: SettingsViewProps)
 
   return (
     <>
-      <Header deviceStatus={_deviceStatus} subtitle="Configure BluePilot settings and behavior" />
+      <Header deviceStatus={_deviceStatus} subtitle={t('settings.subtitle')} />
       {/* Hidden file input for import */}
       <input
         type="file"

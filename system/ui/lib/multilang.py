@@ -198,9 +198,15 @@ class Multilang:
     self.codes = {v: k for k, v in self.languages.items()}
 
     if self._params is not None:
-      lang = str(self._params.get("LanguageSetting")).removeprefix("main_")
-      if lang in self.codes:
-        self._language = lang
+      raw = self._params.get("LanguageSetting")
+      if raw is not None:
+        if isinstance(raw, bytes):
+          lang = raw.decode("utf-8", errors="replace")
+        else:
+          lang = str(raw)
+        lang = lang.removeprefix("main_").strip("\x00").strip()
+        if lang in self.codes:
+          self._language = lang
 
 
 multilang = Multilang()

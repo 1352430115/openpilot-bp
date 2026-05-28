@@ -2,10 +2,11 @@ from typing import Optional
 import pyray as rl
 from cereal import log
 
-from openpilot.selfdrive.ui.onroad.alert_renderer import AlertRenderer, ALERT_PADDING
+from openpilot.selfdrive.ui.onroad.alert_renderer import Alert, AlertRenderer, ALERT_PADDING
 from openpilot.system.ui.lib.application import gui_app
 from openpilot.system.ui.lib.text_measure import measure_text_cached
 from openpilot.selfdrive.ui.bp.lib.ui_debug_logger import bp_ui_log
+from openpilot.system.ui.lib.multilang import tr
 
 AlertSize = log.SelfdriveState.AlertSize
 AlertStatus = log.SelfdriveState.AlertStatus
@@ -69,10 +70,14 @@ class AlertRendererBP(AlertRenderer):
       )
       self._draw_text(text_rect, alert)
 
+  @staticmethod
+  def _localized_alert_text(text: str) -> str:
+    return tr(text) if text else ""
+
   def _get_pill_rect(self, rect: rl.Rectangle, alert) -> Optional[rl.Rectangle]:
     """Calculate pill-shaped notification rectangle below speed display, centered, full width."""
-    line1 = alert.text1 or ""
-    line2 = alert.text2 or ""
+    line1 = self._localized_alert_text(alert.text1)
+    line2 = self._localized_alert_text(alert.text2)
     if not line1 and not line2:
       return None
 
@@ -101,10 +106,19 @@ class AlertRendererBP(AlertRenderer):
   def _draw_pill_background(self, rect: rl.Rectangle) -> None:
     rl.draw_rectangle_rounded(rect, 0.75, 10, PILL_BACKGROUND_COLOR)
 
+  def _draw_text(self, text_rect: rl.Rectangle, alert) -> None:
+    alert = Alert(
+      text1=self._localized_alert_text(alert.text1),
+      text2=self._localized_alert_text(alert.text2),
+      size=alert.size,
+      status=alert.status,
+    )
+    super()._draw_text(text_rect, alert)
+
   def _draw_pill_text(self, rect: rl.Rectangle, alert) -> None:
     """Draw text1 and text2 in pill (no wrapping). Line 1 primary font, line 2 slightly smaller."""
-    line1 = alert.text1 or ""
-    line2 = alert.text2 or ""
+    line1 = self._localized_alert_text(alert.text1)
+    line2 = self._localized_alert_text(alert.text2)
     if not line1 and not line2:
       return
 

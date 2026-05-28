@@ -14,12 +14,22 @@ Modern web interface for browsing and playing route videos directly in your brow
 
 ## Building
 
+The UI is a React + Vite app. **System `npm` is not required** — use the bundled build script (downloads portable Node on first run):
+
 ```bash
 cd bluepilot/web
 ./build.sh
 ```
 
-This copies the source files to the `public/` directory which is served by the backend.
+Output goes to `public/`, which the portal server on port 8088 serves.
+
+If you already have Node 18+ and npm installed:
+
+```bash
+cd bluepilot/web
+npm ci
+npm run build
+```
 
 ## Development
 

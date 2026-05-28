@@ -4,6 +4,7 @@ import { useParamsStore } from '@/stores/useParamsStore'
 import { LoadingSpinner, Button, Modal, ToastContainer, ToggleSwitch, BackToTop } from '@/components/common'
 import type { Parameter, DeviceStatus } from '@/types'
 import { formatParamValueForDisplay } from '@/utils/params'
+import { useTranslation } from '@/i18n'
 import './ParametersView.css'
 
 interface ParametersViewProps {
@@ -42,6 +43,7 @@ const getSortValue = (param: Parameter, column: SortColumn): string | number | b
 }
 
 export const ParametersView = ({ deviceStatus = 'checking' }: ParametersViewProps) => {
+  const { t } = useTranslation()
   const { params, loading, fetchParams, updateParam, searchQuery, setSearchQuery, getFilteredParams } =
     useParamsStore()
   const [editingParam, setEditingParam] = useState<Parameter | null>(null)
@@ -171,7 +173,7 @@ export const ParametersView = ({ deviceStatus = 'checking' }: ParametersViewProp
 
   return (
     <>
-      <Header deviceStatus={deviceStatus} subtitle="Manage system parameters" />
+      <Header deviceStatus={deviceStatus} subtitle={t('parameters.subtitle')} />
       <ToastContainer toasts={toasts} onRemove={removeToast} />
       <div className="params-manager">
         <div className="params-header">

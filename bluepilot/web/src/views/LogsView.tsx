@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react'
 import { Header } from '@/components/layout/Header'
 import { Button, ToggleSwitch, Icon, BackToTop } from '@/components/common'
+import { useTranslation } from '@/i18n'
 import type { DeviceStatus } from '@/types'
 import './LogsView.css'
 
@@ -124,6 +125,7 @@ const parseAnsiColors = (text: string): JSX.Element[] => {
 }
 
 export function LogsView({ deviceStatus = 'checking' }: LogsViewProps) {
+  const { t } = useTranslation()
   const [logLines, setLogLines] = useState<string[]>([])
   const [isPaused, setIsPaused] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -365,7 +367,7 @@ export function LogsView({ deviceStatus = 'checking' }: LogsViewProps) {
 
   return (
     <>
-      <Header deviceStatus={deviceStatus} subtitle="View real-time system logs" />
+      <Header deviceStatus={deviceStatus} subtitle={t('logs.subtitle')} />
       <div className="logs-view">
         <div className="logs-controls">
           <div className="search-container">

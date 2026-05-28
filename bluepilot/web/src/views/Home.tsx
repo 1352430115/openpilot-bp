@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Header } from '@/components/layout/Header'
 import { Icon } from '@/components/common'
+import { useTranslation } from '@/i18n'
 import { useSystemStore } from '@/stores/useSystemStore'
 import { useRoutesStore } from '@/stores/useRoutesStore'
 import { useParamsStore } from '@/stores/useParamsStore'
@@ -48,6 +49,7 @@ interface LastErrorResponse {
 }
 
 export const Home = ({ deviceStatus = 'checking' }: HomeProps) => {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { status, deviceInfo, metrics, diskSpace, fetchStatus, fetchDeviceInfo } = useSystemStore()
   const { fetchRoutes, routes } = useRoutesStore()
@@ -126,7 +128,7 @@ export const Home = ({ deviceStatus = 'checking' }: HomeProps) => {
       const minutes = Math.floor((metrics.uptime_seconds % 3600) / 60)
       return `${hours}h ${minutes}m`
     }
-    return 'N/A'
+    return t('home.na')
   }
 
   // Get color class for CPU temperature
@@ -156,7 +158,7 @@ export const Home = ({ deviceStatus = 'checking' }: HomeProps) => {
 
   // Format storage for display
   const getStorageDisplay = (): string => {
-    if (!diskSpace?.free) return 'N/A'
+    if (!diskSpace?.free) return t('home.na')
     const gb = diskSpace.free / (1024 ** 3)
     if (gb >= 1) {
       return `${gb.toFixed(1)}GB`
@@ -168,42 +170,42 @@ export const Home = ({ deviceStatus = 'checking' }: HomeProps) => {
     <>
       <Header
         deviceStatus={deviceStatus}
-        subtitle="Settings, routes, and diagnostics"
+        subtitle={t('home.subtitle')}
       />
       <div className="dashboard-page">
         <div className="dashboard-insights-grid">
           <section className="dashboard-status-panel">
             <div className="panel-heading">
-              <h2>System Status</h2>
+              <h2>{t('home.systemStatus')}</h2>
             </div>
             <div className="status-pills-container">
               {/* System Metrics */}
               <div className="status-pills-row">
-                <div className="status-pill" title="System uptime">
+                <div className="status-pill" title={t('home.systemUptime')}>
                   <Icon name="schedule" className="pill-icon" />
-                  <span className="pill-label">Uptime</span>
+                  <span className="pill-label">{t('home.uptime')}</span>
                   <span className="pill-value">{getUptimeDisplay()}</span>
                 </div>
 
-                <div className={`status-pill ${getTempColorClass(metrics?.temperature)}`} title="CPU Temperature">
+                <div className={`status-pill ${getTempColorClass(metrics?.temperature)}`} title={t('home.cpuTemperature')}>
                   <Icon name="thermostat" className="pill-icon" />
-                  <span className="pill-label">CPU</span>
+                  <span className="pill-label">{t('home.cpu')}</span>
                   <span className="pill-value">
-                    {metrics?.temperature ? `${metrics.temperature.toFixed(1)}°C` : 'N/A'}
+                    {metrics?.temperature ? `${metrics.temperature.toFixed(1)}°C` : t('home.na')}
                   </span>
                 </div>
 
-                <div className={`status-pill ${getMemoryColorClass(metrics?.memory_percent)}`} title="Memory Usage">
+                <div className={`status-pill ${getMemoryColorClass(metrics?.memory_percent)}`} title={t('home.memoryUsage')}>
                   <Icon name="memory" className="pill-icon" />
-                  <span className="pill-label">Memory</span>
+                  <span className="pill-label">{t('home.memory')}</span>
                   <span className="pill-value">
-                    {metrics?.memory_percent ? `${metrics.memory_percent.toFixed(0)}%` : 'N/A'}
+                    {metrics?.memory_percent ? `${metrics.memory_percent.toFixed(0)}%` : t('home.na')}
                   </span>
                 </div>
 
-                <div className={`status-pill ${getStorageColorClass()}`} title="Storage Free">
+                <div className={`status-pill ${getStorageColorClass()}`} title={t('home.storageFree')}>
                   <Icon name="storage" className="pill-icon" />
-                  <span className="pill-label">Storage</span>
+                  <span className="pill-label">{t('home.storage')}</span>
                   <span className="pill-value">{getStorageDisplay()}</span>
                 </div>
               </div>
@@ -211,28 +213,28 @@ export const Home = ({ deviceStatus = 'checking' }: HomeProps) => {
               {/* Device Info */}
               <div className="status-pills-row">
                 <div className="status-pill">
-                  <span className="pill-label">Dongle ID</span>
-                  <span className="pill-value">{deviceInfo?.dongle_id || 'N/A'}</span>
+                  <span className="pill-label">{t('home.dongleId')}</span>
+                  <span className="pill-value">{deviceInfo?.dongle_id || t('home.na')}</span>
                 </div>
                 <div className="status-pill">
-                  <span className="pill-label">Serial</span>
-                  <span className="pill-value">{deviceInfo?.serial || 'N/A'}</span>
+                  <span className="pill-label">{t('home.serial')}</span>
+                  <span className="pill-value">{deviceInfo?.serial || t('home.na')}</span>
                 </div>
               </div>
 
               {/* Version Info */}
               <div className="status-pills-row">
                 <div className="status-pill">
-                  <span className="pill-label">BP Version</span>
-                  <span className="pill-value">{deviceInfo?.bp_version ? `v${deviceInfo.bp_version}` : 'N/A'}</span>
+                  <span className="pill-label">{t('home.bpVersion')}</span>
+                  <span className="pill-value">{deviceInfo?.bp_version ? `v${deviceInfo.bp_version}` : t('home.na')}</span>
                 </div>
                 <div className="status-pill">
-                  <span className="pill-label">SP Version</span>
-                  <span className="pill-value">{deviceInfo?.sp_version || 'N/A'}</span>
+                  <span className="pill-label">{t('home.spVersion')}</span>
+                  <span className="pill-value">{deviceInfo?.sp_version || t('home.na')}</span>
                 </div>
                 <div className="status-pill">
-                  <span className="pill-label">OP Version</span>
-                  <span className="pill-value">{deviceInfo?.op_version || 'N/A'}</span>
+                  <span className="pill-label">{t('home.opVersion')}</span>
+                  <span className="pill-value">{deviceInfo?.op_version || t('home.na')}</span>
                 </div>
               </div>
             </div>
@@ -240,69 +242,69 @@ export const Home = ({ deviceStatus = 'checking' }: HomeProps) => {
 
           <section className="dashboard-drive-stats-panel">
             <div className="panel-heading">
-              <h2>Drive Statistics</h2>
+              <h2>{t('home.driveStatistics')}</h2>
             </div>
             {driveStatsLoading ? (
-              <div className="drive-stats-loading">Loading...</div>
+              <div className="drive-stats-loading">{t('home.loading')}</div>
             ) : driveStats ? (
               <div className="drive-stats-content">
                 <div className="drive-stats-group">
-                  <h3 className="stats-period-title">All Time</h3>
+                  <h3 className="stats-period-title">{t('home.allTime')}</h3>
                   <div className="stats-cards-grid">
                     <div className="stat-card all-time">
                       <div className="stat-value">{driveStats.all.routes.toLocaleString()}</div>
-                      <div className="stat-label">Total Drives</div>
+                      <div className="stat-label">{t('home.totalDrives')}</div>
                     </div>
                     <div className="stat-card all-time">
                       <div className="stat-value">{Math.round(driveStats.all.distanceMiles).toLocaleString()}</div>
-                      <div className="stat-label">Miles Driven</div>
+                      <div className="stat-label">{t('home.milesDriven')}</div>
                     </div>
                     <div className="stat-card all-time">
                       <div className="stat-value">{Math.round(driveStats.all.duration / 3600).toLocaleString()}</div>
-                      <div className="stat-label">Hours Driven</div>
+                      <div className="stat-label">{t('home.hoursDriven')}</div>
                     </div>
                   </div>
                 </div>
                 <div className="drive-stats-group">
-                  <h3 className="stats-period-title">This Week</h3>
+                  <h3 className="stats-period-title">{t('home.thisWeek')}</h3>
                   <div className="stats-cards-grid">
                     <div className="stat-card">
                       <div className="stat-value">{driveStats.week.routes}</div>
-                      <div className="stat-label">Drives</div>
+                      <div className="stat-label">{t('home.drives')}</div>
                     </div>
                     <div className="stat-card">
                       <div className="stat-value">{Math.round(driveStats.week.distanceMiles)}</div>
-                      <div className="stat-label">Miles</div>
+                      <div className="stat-label">{t('home.miles')}</div>
                     </div>
                     <div className="stat-card">
                       <div className="stat-value">{Math.round(driveStats.week.duration / 3600)}</div>
-                      <div className="stat-label">Hours</div>
+                      <div className="stat-label">{t('home.hours')}</div>
                     </div>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="drive-stats-empty">No drive data available</div>
+              <div className="drive-stats-empty">{t('home.noDriveData')}</div>
             )}
           </section>
 
           <section className="dashboard-quick-panel">
             <div className="panel-heading">
-              <h2>Quick Access</h2>
+              <h2>{t('home.quickAccess')}</h2>
             </div>
             <div className="quick-links-grid">
               <button
                 className={`quick-link-card routes ${deviceStatus === 'onroad' ? 'disabled' : ''}`}
                 onClick={() => deviceStatus !== 'onroad' && navigate('/routes')}
                 disabled={deviceStatus === 'onroad'}
-                title={deviceStatus === 'onroad' ? 'Routes unavailable while driving' : undefined}
+                title={deviceStatus === 'onroad' ? t('home.unavailableWhileDriving') : undefined}
               >
                 <div className="quick-link-icon">
                   <Icon name="place" />
                 </div>
                 <div className="quick-link-copy">
-                  <span className="label">Routes</span>
-                  <span className="subtext">{deviceStatus === 'onroad' ? 'Unavailable while driving' : 'Review recordings'}</span>
+                  <span className="label">{t('home.routes')}</span>
+                  <span className="subtext">{deviceStatus === 'onroad' ? t('home.unavailableWhileDriving') : t('home.reviewRecordings')}</span>
                 </div>
                 <span className="link-badge">{status?.routes_count || 0}</span>
               </button>
@@ -311,8 +313,8 @@ export const Home = ({ deviceStatus = 'checking' }: HomeProps) => {
                   <Icon name="tune" />
                 </div>
                 <div className="quick-link-copy">
-                  <span className="label">Parameters</span>
-                  <span className="subtext">Manage system params</span>
+                  <span className="label">{t('home.parameters')}</span>
+                  <span className="subtext">{t('home.manageSystemParams')}</span>
                 </div>
                 <span className="link-badge">{paramCount}</span>
               </button>
@@ -321,8 +323,8 @@ export const Home = ({ deviceStatus = 'checking' }: HomeProps) => {
                   <Icon name="description" />
                 </div>
                 <div className="quick-link-copy">
-                  <span className="label">System Logs</span>
-                  <span className="subtext">View live system logs</span>
+                  <span className="label">{t('home.systemLogs')}</span>
+                  <span className="subtext">{t('home.viewLiveLogs')}</span>
                 </div>
               </button>
             </div>
@@ -333,7 +335,7 @@ export const Home = ({ deviceStatus = 'checking' }: HomeProps) => {
               <div className="panel-heading">
                 <h2>
                   <Icon name="error" className="error-icon" />
-                  Recent Crash
+                  {t('home.recentCrash')}
                 </h2>
               </div>
               <div className="error-card">
@@ -354,7 +356,7 @@ export const Home = ({ deviceStatus = 'checking' }: HomeProps) => {
                   className="view-logs-button"
                   onClick={() => navigate('/logs')}
                 >
-                  View Full Logs
+                  {t('home.viewFullLogs')}
                 </button>
               </div>
             </section>
