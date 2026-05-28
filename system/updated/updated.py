@@ -173,6 +173,12 @@ def init_overlay() -> None:
   cloudlog.info(f"git diff output:\n{git_diff}")
 
 
+def has_git_submodules(cwd: str) -> bool:
+  # BluePilot: dependencies are vendored in-repo; legacy submodule support only
+  return os.path.exists(os.path.join(cwd, ".gitmodules"))
+  # End BluePilot
+
+
 def finalize_update() -> None:
   """Take the current OverlayFS merged view and finalize a copy outside of
   OverlayFS, ready to be swapped-in at BASEDIR. Copy using shutil.copytree"""
@@ -187,7 +193,10 @@ def finalize_update() -> None:
   shutil.copytree(OVERLAY_MERGED, FINALIZED, symlinks=True)
 
   run(["git", "reset", "--hard"], FINALIZED)
-  run(["git", "submodule", "foreach", "--recursive", "git", "reset", "--hard"], FINALIZED)
+  # BluePilot: skip submodule reset when dependencies are vendored in-repo
+  if has_git_submodules(FINALIZED):
+    run(["git", "submodule", "foreach", "--recursive", "git", "reset", "--hard"], FINALIZED)
+  # End BluePilot
 
   set_consistent_flag(True)
   cloudlog.info("done finalizing overlay")
@@ -382,10 +391,15 @@ class Updater:
       ["git", "branch", "--set-upstream-to", f"origin/{branch}"],
       ["git", "reset", "--hard"],
       ["git", "clean", "-xdff"],
-      ["git", "submodule", "sync"],
-      ["git", "submodule", "update", "--init", "--recursive"],
-      ["git", "submodule", "foreach", "--recursive", "git", "reset", "--hard"],
     ]
+    # BluePilot: skip submodule sync when dependencies are vendored in-repo
+    if has_git_submodules(OVERLAY_MERGED):
+      cmds += [
+        ["git", "submodule", "sync"],
+        ["git", "submodule", "update", "--init", "--recursive"],
+        ["git", "submodule", "foreach", "--recursive", "git", "reset", "--hard"],
+      ]
+    # End BluePilot
     r = [run(cmd, OVERLAY_MERGED) for cmd in cmds]
     cloudlog.info("git reset success: %s", '\n'.join(r))
 

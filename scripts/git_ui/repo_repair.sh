@@ -62,6 +62,10 @@ clone_repo() {
 }
 
 update_submodules() {
+    if [ ! -f "$OPENPILOT_DIR/.gitmodules" ]; then
+        log_info "Dependencies vendored in-repo, skipping submodule update"
+        return 0
+    fi
     log_info "Updating submodules..."
     cd "$OPENPILOT_DIR"
     timeout $TIMEOUT_SUBMODULE git submodule update --init --recursive --progress 2>&1

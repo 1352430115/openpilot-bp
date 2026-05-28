@@ -126,14 +126,20 @@ function op_check_git() {
     return 1
   fi
 
-  echo "Checking for git submodules..."
-  for name in $(git config --file .gitmodules --get-regexp path | awk '{ print $2 }' | tr '\n' ' '); do
-    if [[ -z $(ls $OPENPILOT_ROOT/$name) ]]; then
-      echo -e " ↳ [${RED}✗${NC}] git submodule $name not found! Run 'git submodule update --init --recursive'"
-      return 1
-    fi
-  done
-  echo -e " ↳ [${GREEN}✔${NC}] git submodules found."
+  # BluePilot: dependencies are vendored in-repo; skip legacy submodule checks
+  if [[ -f "$OPENPILOT_ROOT/.gitmodules" ]]; then
+    echo "Checking for git submodules..."
+    for name in $(git config --file .gitmodules --get-regexp path | awk '{ print $2 }' | tr '\n' ' '); do
+      if [[ -z $(ls $OPENPILOT_ROOT/$name) ]]; then
+        echo -e " ↳ [${RED}✗${NC}] git submodule $name not found! Run 'git submodule update --init --recursive'"
+        return 1
+      fi
+    done
+    echo -e " ↳ [${GREEN}✔${NC}] git submodules found."
+  else
+    echo -e " ↳ [${GREEN}✔${NC}] vendored dependencies (no git submodules)."
+  fi
+  # End BluePilot
 }
 
 function op_check_os() {
@@ -243,15 +249,21 @@ function op_setup() {
 
   op_activate_venv
 
-  echo "Getting git submodules..."
-  st="$(date +%s)"
-  if ! retry 3 git submodule update --jobs 4 --init --recursive; then
-    echo -e " ↳ [${RED}✗${NC}] Getting git submodules failed!"
-    loge "ERROR_GIT_SUBMODULES"
-    return 1
+  # BluePilot: dependencies are vendored in-repo; skip legacy submodule init
+  if [[ -f "$OPENPILOT_ROOT/.gitmodules" ]]; then
+    echo "Getting git submodules..."
+    st="$(date +%s)"
+    if ! retry 3 git submodule update --jobs 4 --init --recursive; then
+      echo -e " ↳ [${RED}✗${NC}] Getting git submodules failed!"
+      loge "ERROR_GIT_SUBMODULES"
+      return 1
+    fi
+    et="$(date +%s)"
+    echo -e " ↳ [${GREEN}✔${NC}] Submodules installed successfully in $((et - st)) seconds."
+  else
+    echo -e " ↳ [${GREEN}✔${NC}] Using vendored dependencies (no git submodules)."
   fi
-  et="$(date +%s)"
-  echo -e " ↳ [${GREEN}✔${NC}] Submodules installed successfully in $((et - st)) seconds."
+  # End BluePilot
 
   echo "Pulling git lfs files..."
   st="$(date +%s)"
@@ -397,17 +409,31 @@ function op_switch() {
   fi
   BRANCH="$1"
 
+  op_get_openpilot_dir
+  cd $OPENPILOT_ROOT
+
   git config --replace-all remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
-  git submodule deinit --all --force
+  # BluePilot: skip submodule ops when dependencies are vendored in-repo
+  if [[ -f .gitmodules ]]; then
+    git submodule deinit --all --force
+  fi
+  # End BluePilot
   git fetch "$REMOTE" "$BRANCH"
   git checkout -f FETCH_HEAD
   git checkout -B "$BRANCH" --track "$REMOTE"/"$BRANCH"
-  git submodule deinit --all --force
-  git reset --hard "${REMOTE}/${BRANCH}"
-  git clean -df
-  git submodule update --init --recursive
-  git submodule foreach git reset --hard
-  git submodule foreach git clean -df
+  # BluePilot: skip submodule ops when dependencies are vendored in-repo
+  if [[ -f .gitmodules ]]; then
+    git submodule deinit --all --force
+    git reset --hard "${REMOTE}/${BRANCH}"
+    git clean -df
+    git submodule update --init --recursive
+    git submodule foreach git reset --hard
+    git submodule foreach git clean -df
+  else
+    git reset --hard "${REMOTE}/${BRANCH}"
+    git clean -df
+  fi
+  # End BluePilot
 }
 
 function op_start() {

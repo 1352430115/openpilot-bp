@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+if [ ! -f .gitmodules ]; then
+  echo "No git submodules configured (dependencies vendored in-repo)"
+  exit 0
+fi
+
 has_submodule_changes() {
   local submodule_path="$1"
   if [ -n "$SUBMODULE_PATHS" ]; then
