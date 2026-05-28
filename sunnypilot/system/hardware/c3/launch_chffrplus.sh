@@ -20,7 +20,13 @@ function agnos_init {
 
   if [ $(< /VERSION) != "$AGNOS_VERSION" ]; then
     AGNOS_PY="$DIR/system/hardware/tici/agnos.py"
-    MANIFEST="$SP_C3_DIR/agnos.json"
+    # BluePilot: use AGNOS 16 manifest for upgraded C3 devices
+    if [ "$AGNOS_VERSION" = "16" ]; then
+      MANIFEST="$DIR/system/hardware/tici/agnos.json"
+    else
+      MANIFEST="$SP_C3_DIR/agnos.json"
+    fi
+    # End BluePilot
     if $AGNOS_PY --verify $MANIFEST; then
       sudo reboot
     fi

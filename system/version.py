@@ -148,6 +148,10 @@ class BuildMetadata:
 
   @property
   def channel_type(self) -> str:
+    # BluePilot: treat bp-* branches as C3-compatible
+    if self.channel.startswith("bp-") or self.channel.startswith("BluePilot"):
+      return "tici"
+    # End BluePilot
     if self.channel.endswith("-tici"):
       return "tici"
     elif self.development_channel:
