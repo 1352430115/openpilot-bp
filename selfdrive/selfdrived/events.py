@@ -89,9 +89,17 @@ def below_steer_speed_alert(CP: car.CarParams, CS: car.CarState, sm: messaging.S
 
 def calibration_incomplete_alert(CP: car.CarParams, CS: car.CarState, sm: messaging.SubMaster, metric: bool, soft_disable_time: int, personality) -> Alert:
   first_word = 'Recalibrating' if sm['liveCalibration'].calStatus == log.LiveCalibrationData.Status.recalibrating else 'Calibrating'
+  line2 = f"Drive Above {get_display_speed(MIN_SPEED_FILTER, metric)}"
+  # BluePilot: wait for visible lane lines before calibration can start
+  from openpilot.common.params import Params
+  if Params().get_bool("LaneLineCalibrationRequired"):
+    probs = sm['modelV2'].laneLineProbs if sm.valid['modelV2'] else []
+    if len(probs) < 3 or probs[1] < 0.5 or probs[2] < 0.5:
+      line2 = "Drive on a marked road with visible lane lines"
+  # End BluePilot
   return Alert(
     f"{first_word}: {sm['liveCalibration'].calPerc:.0f}%",
-    f"Drive Above {get_display_speed(MIN_SPEED_FILTER, metric)}",
+    line2,
     AlertStatus.normal, AlertSize.mid,
     Priority.LOWEST, VisualAlert.none, AudibleAlert.none, .2)
 

@@ -3300,3 +3300,67 @@ msgstr "✓ 已訂閱"
 msgid "🔥 Firehose Mode 🔥"
 msgstr "🔥 Firehose 模式 🔥"
 
+#: openpilot/selfdrive/ui/bp/lib/onroad_alert_i18n.py
+msgid "Calibrating"
+msgstr "校準中"
+
+#: openpilot/selfdrive/ui/bp/lib/onroad_alert_i18n.py
+msgid "Recalibrating"
+msgstr "重新校準中"
+
+#: openpilot/selfdrive/ui/bp/lib/onroad_alert_i18n.py
+msgid "Drive Above %s"
+msgstr "請加速至 %s 以上"
+
+#: openpilot/selfdrive/ui/bp/lib/onroad_alert_i18n.py
+msgid "Drive above %s to engage"
+msgstr "請加速至 %s 以上以啟用"
+
+#: openpilot/selfdrive/ui/bp/lib/onroad_alert_i18n.py
+msgid "Drive on a marked road with visible lane lines"
+msgstr "請在有清晰車道線的道路上行駛"
+
+#: openpilot/selfdrive/ui/bp/lib/onroad_alert_i18n.py
+msgid "WARNING: This branch is not tested"
+msgstr "警告：此分支未經測試"
+
+#: openpilot/selfdrive/ui/bp/lib/onroad_alert_i18n.py
+msgid "openpilot Unavailable"
+msgstr "openpilot 不可用"
+
+#: openpilot/selfdrive/ui/bp/lib/onroad_alert_i18n.py
+msgid "Calibration in Progress"
+msgstr "校準進行中"
+
+#: openpilot/selfdrive/ui/bp/lib/onroad_alert_i18n.py
+msgid "Calibration Incomplete"
+msgstr "校準未完成"
+
+#: openpilot/selfdrive/ui/bp/lib/onroad_alert_i18n.py
+msgid "Calibration Invalid"
+msgstr "校準無效"
+
+#: openpilot/selfdrive/ui/bp/lib/onroad_alert_i18n.py
+msgid "System Initializing"
+msgstr "系統初始化中"
+
+#: openpilot/selfdrive/ui/bp/lib/onroad_alert_i18n.py
+msgid "Be ready to take over at any time"
+msgstr "請隨時準備接管"
+
+#: openpilot/selfdrive/ui/bp/lib/onroad_alert_i18n.py
+msgid "Always keep hands on wheel and eyes on road"
+msgstr "請雙手握方向盤並注視道路"
+
+#: openpilot/selfdrive/ui/bp/lib/onroad_alert_i18n.py
+msgid "Remount Detected: Recalibrating"
+msgstr "偵測到重新安裝：正在重新校準"
+
+#: openpilot/selfdrive/ui/bp/lib/onroad_alert_i18n.py
+msgid "Device Remount Detected: Recalibrating"
+msgstr "偵測到裝置重新安裝：正在重新校準"
+
+#: openpilot/selfdrive/ui/bp/lib/onroad_alert_i18n.py
+msgid "Calibration Invalid: Remount Device & Recalibrate"
+msgstr "校準無效：請重新安裝裝置並校準"
+

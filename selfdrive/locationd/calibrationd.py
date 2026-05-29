@@ -19,6 +19,9 @@ from openpilot.common.params import Params
 from openpilot.common.realtime import config_realtime_process
 from openpilot.common.transformations.orientation import rot_from_euler, euler_from_rot
 from openpilot.common.swaglog import cloudlog
+# BluePilot: lane-line gate before first-drive camera calibration
+from bluepilot.selfdrive.locationd.lane_line_calibration import lane_line_calibration_required, lane_lines_valid
+# End BluePilot
 
 MIN_SPEED_FILTER = 15 * CV.MPH_TO_MS
 MAX_VEL_ANGLE_STD = np.radians(0.25)
@@ -262,13 +265,16 @@ def main() -> NoReturn:
   config_realtime_process([0, 1, 2, 3], 5)
 
   pm = messaging.PubMaster(['liveCalibration'])
-  sm = messaging.SubMaster(['cameraOdometry', 'carState'], poll='cameraOdometry')
+  sm = messaging.SubMaster(['cameraOdometry', 'carState', 'modelV2'], poll='cameraOdometry')
 
   params_reader = Params()
   CP = messaging.log_from_bytes(params_reader.get("CarParams", block=True), car.CarParams)
 
   calibrator = Calibrator(param_put=True)
   calibrator.not_car = CP.notCar
+  # BluePilot: gate calibration samples until lane lines are visible on first drive
+  lane_line_calib_required = lane_line_calibration_required(params_reader)
+  # End BluePilot
 
   while 1:
     timeout = 0 if sm.frame == -1 else 100
@@ -276,12 +282,17 @@ def main() -> NoReturn:
 
     if sm.updated['cameraOdometry']:
       calibrator.handle_v_ego(sm['carState'].vEgo)
-      new_rpy = calibrator.handle_cam_odom(sm['cameraOdometry'].trans,
-                                           sm['cameraOdometry'].rot,
-                                           sm['cameraOdometry'].wideFromDeviceEuler,
-                                           sm['cameraOdometry'].transStd,
-                                           sm['cameraOdometry'].roadTransformTrans,
-                                           sm['cameraOdometry'].roadTransformTransStd)
+      # BluePilot: require both lane lines before collecting calibration data
+      lane_lines_ready = not lane_line_calib_required or (sm.valid['modelV2'] and lane_lines_valid(sm['modelV2']))
+      new_rpy = None
+      if lane_lines_ready:
+        new_rpy = calibrator.handle_cam_odom(sm['cameraOdometry'].trans,
+                                             sm['cameraOdometry'].rot,
+                                             sm['cameraOdometry'].wideFromDeviceEuler,
+                                             sm['cameraOdometry'].transStd,
+                                             sm['cameraOdometry'].roadTransformTrans,
+                                             sm['cameraOdometry'].roadTransformTransStd)
+      # End BluePilot
 
       if DEBUG and new_rpy is not None:
         print('got new rpy', new_rpy)
@@ -289,6 +300,11 @@ def main() -> NoReturn:
     # 4Hz driven by cameraOdometry
     if sm.frame % 5 == 0:
       calibrator.send_data(pm, sm.all_checks())
+      # BluePilot: first-drive gate only applies until initial calibration completes
+      if lane_line_calib_required and calibrator.cal_status == log.LiveCalibrationData.Status.calibrated:
+        params_reader.put_bool("LaneLineCalibrationRequired", False)
+        lane_line_calib_required = False
+      # End BluePilot
 
 
 if __name__ == "__main__":

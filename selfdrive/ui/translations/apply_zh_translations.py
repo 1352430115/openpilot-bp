@@ -464,6 +464,23 @@ ZH_CHS = {
  "Hill Descent Control": "陡坡缓降",
  "Battery Temperature": "电池温度",
  "Drive Mode": "驾驶模式",
+ # Onroad alert strings (selfdrived -> AlertRendererBP)
+ "Calibrating": "校准中",
+ "Recalibrating": "重新校准中",
+ "Drive Above %s": "请加速至 %s 以上",
+ "Drive above %s to engage": "请加速至 %s 以上以启用",
+ "Drive on a marked road with visible lane lines": "请在有清晰车道线的道路上行驶",
+ "WARNING: This branch is not tested": "警告：此分支未经测试",
+ "openpilot Unavailable": "openpilot 不可用",
+ "Calibration in Progress": "校准进行中",
+ "Calibration Incomplete": "校准未完成",
+ "Calibration Invalid": "校准无效",
+ "System Initializing": "系统初始化中",
+ "Be ready to take over at any time": "请随时准备接管",
+ "Always keep hands on wheel and eyes on road": "请双手握方向盘并注视道路",
+ "Remount Detected: Recalibrating": "检测到重新安装：正在重新校准",
+ "Device Remount Detected: Recalibrating": "检测到设备重新安装：正在重新校准",
+ "Calibration Invalid: Remount Device & Recalibrate": "校准无效：请重新安装设备并校准",
 }
 
 # Traditional Chinese: start from simplified and apply common conversions

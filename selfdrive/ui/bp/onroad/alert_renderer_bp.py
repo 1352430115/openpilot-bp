@@ -6,7 +6,7 @@ from openpilot.selfdrive.ui.onroad.alert_renderer import Alert, AlertRenderer, A
 from openpilot.system.ui.lib.application import gui_app
 from openpilot.system.ui.lib.text_measure import measure_text_cached
 from openpilot.selfdrive.ui.bp.lib.ui_debug_logger import bp_ui_log
-from openpilot.system.ui.lib.multilang import tr
+from openpilot.selfdrive.ui.bp.lib.onroad_alert_i18n import localize_onroad_alert_text
 
 AlertSize = log.SelfdriveState.AlertSize
 AlertStatus = log.SelfdriveState.AlertStatus
@@ -72,7 +72,7 @@ class AlertRendererBP(AlertRenderer):
 
   @staticmethod
   def _localized_alert_text(text: str) -> str:
-    return tr(text) if text else ""
+    return localize_onroad_alert_text(text)
 
   def _get_pill_rect(self, rect: rl.Rectangle, alert) -> Optional[rl.Rectangle]:
     """Calculate pill-shaped notification rectangle below speed display, centered, full width."""

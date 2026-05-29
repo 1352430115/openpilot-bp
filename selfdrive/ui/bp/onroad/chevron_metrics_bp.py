@@ -70,7 +70,7 @@ class ChevronMetricsBP(ChevronMetrics):
 
       # Distance
       val = max(0.0, d_rel)
-      unit = "m" if ui_state.is_metric else "ft"
+      unit = tr("m") if ui_state.is_metric else tr("ft")
       if not ui_state.is_metric:
         val *= 3.28084
       text_lines.append(f"{val:.0f} {unit}")

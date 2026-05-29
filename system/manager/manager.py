@@ -23,6 +23,9 @@ from openpilot.system.hardware.hw import Paths
 from openpilot.system.hardware import PC
 
 from openpilot.sunnypilot.system.params_migration import run_migration
+# BluePilot: first-install calibration migration
+from bluepilot.params.bp_migration import run_bp_migration
+# End BluePilot
 
 # BluePilot: hwj dp260513 C3 — alias panda_tici as panda on classic TICI (F4 internal panda)
 from openpilot.common.panda_loader import load_panda_module
@@ -69,6 +72,9 @@ def manager_init() -> None:
     params.put_bool("RecordFront", True)
 
   run_migration(params)
+  # BluePilot: lane-line calibration gate on first install
+  run_bp_migration(params)
+  # End BluePilot
 
   # set unset params to their default value
   for k in params.all_keys():

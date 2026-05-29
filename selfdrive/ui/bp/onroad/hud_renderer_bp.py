@@ -5,6 +5,7 @@ from openpilot.selfdrive.ui.sunnypilot.onroad.hud_renderer import HudRendererSP
 from openpilot.selfdrive.ui.ui_state import ui_state
 from openpilot.system.ui.lib.text_measure import measure_text_cached
 from openpilot.selfdrive.ui.bp.lib.ui_debug_logger import bp_ui_log
+from openpilot.system.ui.lib.multilang import tr
 
 # BluePilot: Y center for speed display (matching upstream hardcoded values)
 SPEED_CENTER_Y = 180
@@ -99,7 +100,7 @@ class HudRendererBP(HudRendererSP):
     speed_color = rl.Color(255, 60, 60, 255) if self._brakes_on else COLORS.WHITE
     rl.draw_text_ex(self._font_bold, speed_text, speed_pos, FONT_SIZES.current_speed, 0, speed_color)
 
-    unit_text = "km/h" if ui_state.is_metric else "mph"
+    unit_text = tr("km/h") if ui_state.is_metric else tr("mph")
     unit_text_size = measure_text_cached(self._font_medium, unit_text, FONT_SIZES.speed_unit)
     unit_pos = rl.Vector2(rect.x + rect.width / 2 - unit_text_size.x / 2, SPEED_UNIT_CENTER_Y - unit_text_size.y / 2)
     # Draw drop shadow for readability over camera feed
