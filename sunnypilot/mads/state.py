@@ -43,6 +43,7 @@ class StateMachine:
     return bool(self._events.contains_in_list(GEARS_ALLOW_PAUSED) or self._events_sp.contains_in_list(GEARS_ALLOW_PAUSED_SILENT))
 
   def update(self):
+    prev_state = self.state
     # soft disable timer and current alert types are from the state machine of openpilot
     # decrement the soft disable timer at every step, as it's reset on
     # entrance in SOFT_DISABLING state

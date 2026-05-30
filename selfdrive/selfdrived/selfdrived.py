@@ -479,6 +479,12 @@ class SelfdriveD(CruiseHelper):
           self.state_machine.state = State.enabled
 
         self.initialized = True
+        try:
+          from bluepilot.logger.control_ui_trace import ControlUiTracer
+          ignition = any(ps.ignitionLine or ps.ignitionCan for ps in self.sm['pandaStates'])
+          ControlUiTracer.on_vehicle_started(ignition=ignition, started=True)
+        except Exception:
+          pass
         cloudlog.event(
           "selfdrived.initialized",
           dt=self.sm.frame*DT_CTRL,
@@ -581,6 +587,17 @@ class SelfdriveD(CruiseHelper):
     self.update_events(CS)
     if not self.CP.passive and self.initialized:
       self.enabled, self.active = self.state_machine.update(self.events)
+      try:
+        from bluepilot.logger.control_ui_trace import ControlUiTracer
+        ControlUiTracer.on_selfdrive_state(
+          enabled=bool(self.enabled),
+          active=bool(self.active),
+          state=str(self.state_machine.state),
+          experimental_mode=bool(self.experimental_mode),
+          op_long=bool(self.CP.openpilotLongitudinalControl),
+        )
+      except Exception:
+        pass
     if not self.CP.notCar:
       self.mads.update(CS)
     self.update_alerts(CS)

@@ -191,6 +191,19 @@ class ModularAssistiveDrivingSystem:
     self.events.remove(EventName.pedalPressed)
     self.events.remove(EventName.wrongCruiseMode)
 
+    try:
+      from bluepilot.logger.control_ui_trace import ControlUiTracer
+      cruise_edge = CS.cruiseState.available and not self.selfdrive.CS_prev.cruiseState.available
+      ControlUiTracer.on_mads_events_sp(
+        self.events_sp,
+        cruise_available=bool(CS.cruiseState.available),
+        cruise_enabled=bool(CS.cruiseState.enabled),
+        cruise_edge=cruise_edge,
+      )
+      ControlUiTracer.on_onroad_events(self.events, self.events_sp)
+    except Exception:
+      pass
+
   def update(self, CS: structs.CarState):
     if not self.enabled_toggle:
       return
@@ -198,7 +211,21 @@ class ModularAssistiveDrivingSystem:
     self.update_events(CS)
 
     if not self.CP.passive and self.selfdrive.initialized:
+      prev_sm_state = self.state_machine.state
       self.enabled, self.active = self.state_machine.update()
+      try:
+        from bluepilot.logger.control_ui_trace import ControlUiTracer
+        ControlUiTracer.on_mads_state_machine(
+          prev_state=prev_sm_state,
+          new_state=self.state_machine.state,
+          enabled=bool(self.enabled),
+          active=bool(self.active),
+          events=self.events,
+          events_sp=self.events_sp,
+          cs=CS,
+        )
+      except Exception:
+        pass
 
     # Copy of previous SelfdriveD states for MADS events handling
     self.selfdrive.enabled_prev = self.selfdrive.enabled

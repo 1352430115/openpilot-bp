@@ -65,7 +65,6 @@ class Controls(ControlsExt):
       self.LaC = LatControlTorque(self.CP, self.CP_SP, self.CI, DT_CTRL)
 
     self.LaC = ControlsExt.initialize_lateral_control(self, self.LaC, self.CI, DT_CTRL)
-
   def update(self):
     self.sm.update(15)
     if self.sm.updated["liveCalibration"]:
@@ -132,6 +131,49 @@ class Controls(ControlsExt):
     # accel PID loop
     pid_accel_limits = self.CI.get_pid_accel_limits(self.CP, self.CP_SP, CS.vEgo, CS.vCruise * CV.KPH_TO_MS)
     actuators.accel = float(self.LoC.update(CC.longActive, CS, long_plan.aTarget, long_plan.shouldStop, pid_accel_limits))
+
+    try:
+      from bluepilot.logger.control_ui_trace import ControlUiTracer
+      ss_sp = self.sm['selfdriveStateSP']
+      lat_gates = []
+      if not _lat_active:
+        if ss_sp.mads.available and not ss_sp.mads.active:
+          lat_gates.append("mads_not_active")
+        elif not ss_sp.mads.available and not self.sm['selfdriveState'].active:
+          lat_gates.append("ss_not_active")
+        else:
+          lat_gates.append("get_lat_active_false")
+      if CS.steerFaultTemporary:
+        lat_gates.append("steer_fault_temp")
+      if CS.steerFaultPermanent:
+        lat_gates.append("steer_fault_perm")
+      if standstill and not self.CP.steerAtStandstill:
+        lat_gates.append("standstill")
+      ControlUiTracer.on_lat_decision(
+        lat_active=bool(CC.latActive),
+        lat_requested=bool(_lat_active),
+        lat_gates_failed=lat_gates,
+        mads_available=bool(ss_sp.mads.available),
+        mads_active=bool(ss_sp.mads.active),
+        mads_enabled=bool(ss_sp.mads.enabled),
+        mads_state=str(ss_sp.mads.state),
+        ss_active=bool(self.sm['selfdriveState'].active),
+        curvature=float(self.curvature),
+        desired_curvature=float(self.desired_curvature),
+      )
+      ControlUiTracer.on_long_decision(
+        long_active=bool(CC.longActive),
+        cc_enabled=bool(CC.enabled),
+        override_longitudinal=any(e.overrideLongitudinal for e in self.sm['onroadEvents']),
+        op_long=bool(self.CP.openpilotLongitudinalControl),
+        pcm_cruise_speed=bool(self.CP_SP.pcmCruiseSpeed),
+        accel=float(actuators.accel),
+        long_control_state=str(actuators.longControlState),
+        cruise_enabled=bool(CS.cruiseState.enabled),
+        v_ego_mph=float(CS.vEgo * 2.237),
+      )
+    except Exception:
+      pass
 
     # Steering PID loop and lateral MPC
     # Reset desired curvature to current to avoid violating the limits on engage

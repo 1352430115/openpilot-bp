@@ -350,6 +350,10 @@ def startLocalProxy(global_end_event: threading.Event, remote_ws_uri: str, local
 
 
 def main(exit_event: threading.Event | None = None):
+  if not params.get_bool("SunnylinkEnabled"):
+    cloudlog.info("Sunnylink disabled, exiting sunnylinkd")
+    return
+
   try:
     set_core_affinity([0, 1, 2, 3])
   except Exception:
