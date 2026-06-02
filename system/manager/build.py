@@ -44,13 +44,16 @@ def ensure_c3_panda_firmware() -> None:
 
   panda_obj = Path(BASEDIR) / "panda" / "board" / "obj"
   panda_tici_obj = Path(BASEDIR) / "panda_tici" / "board" / "obj"
+  panda_obj.mkdir(parents=True, exist_ok=True)
   panda_tici_obj.mkdir(parents=True, exist_ok=True)
 
   if os.environ.get("TICI_TRES") == "1":
     _link_h7_aliases(panda_obj)
     _link_h7_aliases(panda_tici_obj)
   else:
+    # BluePilot: keep both firmware roots populated; pandad module path can vary by env
     _copy_f4_firmware(panda_obj, panda_tici_obj)
+    _copy_f4_firmware(panda_tici_obj, panda_obj)
 # End BluePilot
 
 TOTAL_SCONS_NODES = 2705

@@ -41,6 +41,7 @@ class CarState(CarStateBase, MadsCarState, CarStateExt):
     self.cluster_speed_hyst_gap = CV.KPH_TO_MS / 2.
     self.distance_button = 0
     self.lc_button = 0
+    self.steering_angle_offset_deg = 0.0
 
     # Save the HEV data available flag to a param
     self.params.put_bool("FordPrefHevDataAvailable", True if CP.flags & FordFlags.HEV_CLUSTER_DATA else False)
@@ -90,7 +91,7 @@ class CarState(CarStateBase, MadsCarState, CarStateExt):
     ret_sp = structs.CarStateSP()
 
     if self.CP.flags & FordFlags.ALT_STEER_ANGLE:
-      self.vehicle_sensors_valid = (
+      ret.vehicleSensorsInvalid = not (
         int((cp.vl["ParkAid_Data"]["ExtSteeringAngleReq2"] + 1000) * 10) not in (32766, 32767)
         and cp.vl["ParkAid_Data"]["EPASExtAngleStatReq"] == 0
         and cp.vl["ParkAid_Data"]["ApaSys_D_Stat"] in (0, 1)
@@ -121,7 +122,7 @@ class CarState(CarStateBase, MadsCarState, CarStateExt):
     # steering wheel
     if self.CP.flags & FordFlags.ALT_STEER_ANGLE:
       steering_angle_init = cp.vl["SteeringPinion_Data_Alt"]["StePinRelInit_An_Sns"]
-      if self.vehicle_sensors_valid:
+      if not ret.vehicleSensorsInvalid:
         steering_angle_est = cp.vl["ParkAid_Data"]["ExtSteeringAngleReq2"]
         self.steering_angle_offset_deg = steering_angle_est - steering_angle_init
       ret.steeringAngleDeg = steering_angle_init + self.steering_angle_offset_deg
@@ -405,7 +406,7 @@ class CarState(CarStateBase, MadsCarState, CarStateExt):
         ("INSTRUMENT_PANEL", 1),
       ]
 
-    if CP.transmissionType == TransmissionType.automatic:
+    if CP.transmissionType == TransmissionType.automatic and (CP.flags & FordFlags.CANFD):
       pt_messages += [
         ("Gear_Shift_by_Wire_FD1", 10),
       ]
