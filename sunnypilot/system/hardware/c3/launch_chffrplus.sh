@@ -67,7 +67,6 @@ set_lite_hw() {
 
 # BluePilot: C3 panda firmware setup — F4 copy for classic C3, H7 aliases for C3X
 function ensure_c3_panda_firmware {
-  mkdir -p "$DIR/panda/board/obj"
   mkdir -p "$DIR/panda_tici/board/obj"
 
   if [ "$TICI_TRES" = "1" ]; then
@@ -84,13 +83,6 @@ function ensure_c3_panda_firmware {
     for name in panda.bin.signed bootstub.panda.bin; do
       src="$DIR/panda/board/obj/$name"
       dst="$DIR/panda_tici/board/obj/$name"
-      if [ -f "$src" ] && [ ! -e "$dst" ]; then
-        cp -f "$src" "$dst"
-      fi
-
-      # BluePilot: mirror back as well in case only panda_tici artifacts were deployed
-      src="$DIR/panda_tici/board/obj/$name"
-      dst="$DIR/panda/board/obj/$name"
       if [ -f "$src" ] && [ ! -e "$dst" ]; then
         cp -f "$src" "$dst"
       fi
