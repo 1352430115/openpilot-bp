@@ -115,15 +115,16 @@ class DeveloperLayoutSP(DeveloperLayout):
       clear_control_trace_log()
 
   def _on_control_log_closed(self, result, log_exists):
-    if result == DialogResult.CONFIRM and log_exists:
+    if result == DialogResult.CLEAR and log_exists:
       dialog2 = ConfirmDialog(tr("Would you like to delete this log?"), tr("Yes"), tr("No"), rich=False,
                                callback=self._on_control_log_delete_confirm)
       gui_app.push_widget(dialog2)
 
   def _on_control_log_clicked(self):
     body = read_control_trace_log().strip()
+    has_log = bool(body)
     text = ""
-    if body:
+    if has_log:
       mtime_path = control_trace_log_path()
       if os.path.exists(mtime_path):
         text = f"<b>{datetime.datetime.fromtimestamp(os.path.getmtime(mtime_path)).strftime('%d-%b-%Y %H:%M:%S').upper()}</b><br><br>"
@@ -132,7 +133,8 @@ class DeveloperLayoutSP(DeveloperLayout):
       text = tr("No control trace log recorded. Enable Control Trace Log and drive with openpilot engaged.")
     dialog = HtmlModalSP(
       text=text,
-      callback=lambda result: self._on_control_log_closed(result, self._control_log_has_content()),
+      show_clear_button=has_log,
+      callback=lambda result: self._on_control_log_closed(result, has_log),
     )
     gui_app.push_widget(dialog)
 

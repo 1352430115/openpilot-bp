@@ -17,6 +17,7 @@ except ImportError:
 class DialogResult(IntEnum):
   CANCEL = 0
   CONFIRM = 1
+  CLEAR = 2
   NO_ACTION = -1
 
 
