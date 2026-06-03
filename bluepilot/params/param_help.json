@@ -299,6 +299,11 @@
     "zh-CHS": "表示需完成车道线标定后才能使用完整横向功能。",
     "zh-CHT": "表示需完成車道線標定後才能使用完整橫向功能。"
   },
+  "BPUseDomesticNtp": {
+    "en": "Use China-friendly NTP servers (systemd-timesyncd) on device boot.",
+    "zh-CHS": "在设备启动时使用国内 NTP 服务器校时（systemd-timesyncd）。",
+    "zh-CHT": "在裝置啟動時使用國內 NTP 伺服器校時（systemd-timesyncd）。"
+  },
   "OffroadDisplayTest": {
     "en": "Development flag for offroad display testing.",
     "zh-CHS": "用于离路显示测试的开发标志。",

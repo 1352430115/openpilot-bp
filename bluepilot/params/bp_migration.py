@@ -1,9 +1,11 @@
 from openpilot.common.params import Params, UnknownKeyName
 from openpilot.common.swaglog import cloudlog
+from bluepilot.system.ntp_setup import ensure_domestic_ntp
 
 
 def run_bp_migration(params: Params) -> None:
   """BluePilot param migrations run once per manager start."""
+  ensure_domestic_ntp(params)
   _ensure_first_install_calibration(params)
 
 

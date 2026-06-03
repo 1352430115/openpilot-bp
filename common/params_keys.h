@@ -324,6 +324,7 @@ inline static std::unordered_map<std::string, ParamKeyAttributes> keys = {
     // BluePilot: UI params
     {"BPLastSeenVersion", {PERSISTENT, STRING}},
     {"LaneLineCalibrationRequired", {PERSISTENT | BACKUP, BOOL, "0"}},
+    {"BPUseDomesticNtp", {PERSISTENT | BACKUP, BOOL, "1"}},
 
     // WiFi Management
     {"WifiFavoriteSSID", {PERSISTENT | BACKUP, STRING}},
