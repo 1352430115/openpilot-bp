@@ -752,11 +752,12 @@ class CarController(CarControllerBase, IntelligentCruiseButtonManagementInterfac
 
       accel_pitch_compensated = op_accel + accel_due_to_pitch
       op_brake_actuate = self.op_brake_actuate_last
-      if accel_pitch_compensated > self.brake_actuate_release or not CC.longActive:
+      # Match spbig/sunnypilot Ford ACC: conservative brake_request thresholds (0.3 / 0.0)
+      if accel_pitch_compensated > 0.3 or not CC.longActive:
         op_brake_actuate = False
-      elif accel_pitch_compensated < self.brake_actuate_target:
+      elif accel_pitch_compensated < 0.0:
         op_brake_actuate = True
-      # else: keep op_brake_actuate (hysteresis between 0 and 0.3)
+      # else: keep op_brake_actuate (hysteresis band)
 
       stopping = CC.actuators.longControlState == LongCtrlState.stopping
       # target_speed = float(np.clip(actuators.speed * self.target_speed_multiplier, 0, V_CRUISE_MAX))
@@ -860,12 +861,12 @@ class CarController(CarControllerBase, IntelligentCruiseButtonManagementInterfac
           max_follow_accel = op_accel
           min_follow_accel = op_accel
 
-        # limits with no lead
+        # limits with no lead — pass through stock op targets (clamping to 0 caused PCM cruise faults)
         if lead is None:
           max_follow_gas = op_gas
           min_follow_gas = op_gas
-          max_follow_accel = 0
-          min_follow_accel = 0
+          max_follow_accel = op_accel
+          min_follow_accel = op_accel
 
 
         # apply our bp gas and accel targets
@@ -925,9 +926,12 @@ class CarController(CarControllerBase, IntelligentCruiseButtonManagementInterfac
         gas = float(clip(gas, CarControllerParams.MIN_GAS, CarControllerParams.ACCEL_MAX))
       accel_pred_send = CarControllerParams.INACTIVE_GAS
 
+      # spbig flow: only assert ACC enable when cruise main is on; use one brake_request bit pair
+      acc_long_active = CC.longActive and main_on
+      brake_request = brake_actuate or precharge_actuate
       can_sends.append(fordcan.create_acc_msg(
-        self.packer, self.CAN, CC.longActive, gas, accel, accel_pred_send, stopping,
-        brake_actuate, precharge_actuate, v_ego_kph=target_speed
+        self.packer, self.CAN, acc_long_active, gas, accel, accel_pred_send, stopping,
+        brake_request, brake_request, v_ego_kph=target_speed
       ))
 
       self.accel = accel

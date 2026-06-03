@@ -114,6 +114,12 @@ class Controls(ControlsExt):
                    (not standstill or self.CP.steerAtStandstill)
     CC.longActive = CC.enabled and not any(e.overrideLongitudinal for e in self.sm['onroadEvents']) and \
                     (self.CP.openpilotLongitudinalControl or not self.CP_SP.pcmCruiseSpeed)
+    # BluePilot: Ford MADS — match spbig ACC flow; don't command OP long until selfdrive is active
+    # (avoids Cmbb_B_Enbl/auto-ACC when only lateral/MADS is engaged or during preEnable)
+    if (self.CP.brand == 'ford' and self.CP.openpilotLongitudinalControl
+        and self.sm['selfdriveStateSP'].mads.available):
+      CC.longActive = CC.longActive and self.sm['selfdriveState'].active
+    # End BluePilot
 
     actuators = CC.actuators
     actuators.longControlState = self.LoC.long_control_state
