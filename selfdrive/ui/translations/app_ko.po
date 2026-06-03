@@ -2763,6 +2763,31 @@ msgstr ""
 msgid "View the error log for sunnypilot crashes."
 msgstr ""
 
+#: ../pythonpath/openpilot/selfdrive/ui/sunnypilot/layouts/settings/developer.py
+#, python-format
+msgid "Control Log"
+msgstr "제어 로그"
+
+#: ../pythonpath/openpilot/selfdrive/ui/sunnypilot/layouts/settings/developer.py
+#, python-format
+msgid "Control Trace Log"
+msgstr "제어 추적 로그"
+
+#: ../pythonpath/openpilot/selfdrive/ui/sunnypilot/layouts/settings/developer.py
+#, python-format
+msgid "Record lateral and longitudinal control state transitions while driving."
+msgstr "주행 중 횡방향 및 종방향 제어 상태 변화를 기록합니다."
+
+#: ../pythonpath/openpilot/selfdrive/ui/sunnypilot/layouts/settings/developer.py
+#, python-format
+msgid "View the control trace log from recent onroad sessions."
+msgstr "최근 주행 세션의 제어 추적 로그를 봅니다."
+
+#: ../pythonpath/openpilot/selfdrive/ui/sunnypilot/layouts/settings/developer.py
+#, python-format
+msgid "No control trace log recorded. Enable Control Trace Log and drive with openpilot engaged."
+msgstr "제어 로그가 없습니다. 제어 추적 로그를 켜고 openpilot 제어 상태에서 주행하세요."
+
 #: ../pythonpath/openpilot/selfdrive/ui/sunnypilot/layouts/settings/models.py:59
 #, python-format
 msgid "Vision Model"

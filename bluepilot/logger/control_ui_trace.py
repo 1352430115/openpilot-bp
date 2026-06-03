@@ -2,16 +2,16 @@
 """
 Trace root variables that drive lateral/longitudinal control — not UI border colors.
 
-Logs state transitions and the underlying signals/events that cause them.
+When BPControlTraceEnabled is set, entries are appended to control_trace.log
+under the crash log directory for viewing in Developer settings.
 """
 from __future__ import annotations
 
+import fcntl
+import os
+import time
+from datetime import datetime
 from typing import Any
-
-from openpilot.common.swaglog import cloudlog
-
-# Lateral/longitudinal control trace logging. Set True when actively debugging.
-_CONTROL_TRACE_ENABLED = False
 
 MADS_STATE_NAMES = {
   0: "disabled",
@@ -21,11 +21,95 @@ MADS_STATE_NAMES = {
   4: "overriding",
 }
 
+_CONTROL_TRACE_PARAM = "BPControlTraceEnabled"
+_ENABLED_CACHE: bool = False
+_ENABLED_CHECK_TS: float = 0.0
+_CHECK_INTERVAL = 1.0
+_MAX_LOG_BYTES = 512 * 1024
+
+
+def _log_dir() -> str:
+  from openpilot.system.hardware.hw import Paths
+  return Paths.crash_log_root()
+
+
+def control_trace_log_path() -> str:
+  return os.path.join(_log_dir(), "control_trace.log")
+
+
+def _is_enabled() -> bool:
+  global _ENABLED_CACHE, _ENABLED_CHECK_TS
+  now = time.monotonic()
+  if now - _ENABLED_CHECK_TS >= _CHECK_INTERVAL:
+    try:
+      from openpilot.common.params import Params
+      _ENABLED_CACHE = Params().get_bool(_CONTROL_TRACE_PARAM)
+    except Exception:
+      _ENABLED_CACHE = False
+    _ENABLED_CHECK_TS = now
+  return _ENABLED_CACHE
+
+
+def _rotate_if_needed(path: str) -> None:
+  try:
+    if os.path.exists(path) and os.path.getsize(path) > _MAX_LOG_BYTES:
+      backup = path + ".1"
+      if os.path.exists(backup):
+        os.remove(backup)
+      os.rename(path, backup)
+  except OSError:
+    pass
+
+
+def _format_value(value: Any) -> str:
+  if isinstance(value, float):
+    return f"{value:g}"
+  if isinstance(value, (list, tuple)):
+    return "[" + ",".join(str(v) for v in value) + "]"
+  return str(value)
+
 
 def _event(name: str, **kwargs: Any) -> None:
-  if not _CONTROL_TRACE_ENABLED:
+  if not _is_enabled():
     return
-  cloudlog.event(f"bp_control_trace.{name}", **kwargs)
+
+  ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S.") + f"{datetime.now().microsecond // 1000:03d}"
+  fields = " ".join(f"{k}={_format_value(v)}" for k, v in kwargs.items())
+  line = f"{ts} {name} {fields}\n"
+
+  path = control_trace_log_path()
+  try:
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    _rotate_if_needed(path)
+    with open(path, "a", encoding="utf-8") as f:
+      fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+      try:
+        f.write(line)
+      finally:
+        fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+  except OSError:
+    pass
+
+
+def read_control_trace_log() -> str:
+  parts: list[str] = []
+  for path in (control_trace_log_path() + ".1", control_trace_log_path()):
+    if os.path.exists(path):
+      try:
+        with open(path, encoding="utf-8") as f:
+          parts.append(f.read())
+      except OSError:
+        pass
+  return "".join(parts)
+
+
+def clear_control_trace_log() -> None:
+  for path in (control_trace_log_path(), control_trace_log_path() + ".1"):
+    try:
+      if os.path.exists(path):
+        os.remove(path)
+    except OSError:
+      pass
 
 
 def _mads_state_name(state: Any) -> str:

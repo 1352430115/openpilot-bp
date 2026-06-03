@@ -2768,6 +2768,31 @@ msgstr "车辆"
 msgid "View the error log for sunnypilot crashes."
 msgstr "查看 sunnypilot 崩溃错误日志。"
 
+#: ../pythonpath/openpilot/selfdrive/ui/sunnypilot/layouts/settings/developer.py
+#, python-format
+msgid "Control Log"
+msgstr "控车日志"
+
+#: ../pythonpath/openpilot/selfdrive/ui/sunnypilot/layouts/settings/developer.py
+#, python-format
+msgid "Control Trace Log"
+msgstr "启用控车日志"
+
+#: ../pythonpath/openpilot/selfdrive/ui/sunnypilot/layouts/settings/developer.py
+#, python-format
+msgid "Record lateral and longitudinal control state transitions while driving."
+msgstr "记录行车时的横向/纵向控车状态变化。"
+
+#: ../pythonpath/openpilot/selfdrive/ui/sunnypilot/layouts/settings/developer.py
+#, python-format
+msgid "View the control trace log from recent onroad sessions."
+msgstr "查看最近行车控车日志。"
+
+#: ../pythonpath/openpilot/selfdrive/ui/sunnypilot/layouts/settings/developer.py
+#, python-format
+msgid "No control trace log recorded. Enable Control Trace Log and drive with openpilot engaged."
+msgstr "暂无控车日志。请先启用控车日志并在 openpilot 控车状态下行驶。"
+
 #: ../pythonpath/openpilot/selfdrive/ui/sunnypilot/layouts/settings/models.py:59
 #, python-format
 msgid "Vision Model"

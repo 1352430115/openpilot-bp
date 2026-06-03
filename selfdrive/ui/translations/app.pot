@@ -2387,6 +2387,31 @@ msgstr ""
 msgid "View the error log for sunnypilot crashes."
 msgstr ""
 
+#: ../pythonpath/openpilot/selfdrive/ui/sunnypilot/layouts/settings/developer.py
+#, python-format
+msgid "Control Log"
+msgstr ""
+
+#: ../pythonpath/openpilot/selfdrive/ui/sunnypilot/layouts/settings/developer.py
+#, python-format
+msgid "Control Trace Log"
+msgstr ""
+
+#: ../pythonpath/openpilot/selfdrive/ui/sunnypilot/layouts/settings/developer.py
+#, python-format
+msgid "Record lateral and longitudinal control state transitions while driving."
+msgstr ""
+
+#: ../pythonpath/openpilot/selfdrive/ui/sunnypilot/layouts/settings/developer.py
+#, python-format
+msgid "View the control trace log from recent onroad sessions."
+msgstr ""
+
+#: ../pythonpath/openpilot/selfdrive/ui/sunnypilot/layouts/settings/developer.py
+#, python-format
+msgid "No control trace log recorded. Enable Control Trace Log and drive with openpilot engaged."
+msgstr ""
+
 #: ../pythonpath/openpilot/selfdrive/ui/sunnypilot/layouts/settings/developer.py:72
 #, python-format
 msgid "Would you like to delete this log?"

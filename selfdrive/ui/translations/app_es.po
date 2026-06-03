@@ -2763,6 +2763,31 @@ msgstr ""
 msgid "View the error log for sunnypilot crashes."
 msgstr ""
 
+#: ../pythonpath/openpilot/selfdrive/ui/sunnypilot/layouts/settings/developer.py
+#, python-format
+msgid "Control Log"
+msgstr "Registro de control"
+
+#: ../pythonpath/openpilot/selfdrive/ui/sunnypilot/layouts/settings/developer.py
+#, python-format
+msgid "Control Trace Log"
+msgstr "Registro de trazas de control"
+
+#: ../pythonpath/openpilot/selfdrive/ui/sunnypilot/layouts/settings/developer.py
+#, python-format
+msgid "Record lateral and longitudinal control state transitions while driving."
+msgstr "Registra cambios de estado del control lateral y longitudinal mientras conduce."
+
+#: ../pythonpath/openpilot/selfdrive/ui/sunnypilot/layouts/settings/developer.py
+#, python-format
+msgid "View the control trace log from recent onroad sessions."
+msgstr "Ver el registro de trazas de control de sesiones recientes."
+
+#: ../pythonpath/openpilot/selfdrive/ui/sunnypilot/layouts/settings/developer.py
+#, python-format
+msgid "No control trace log recorded. Enable Control Trace Log and drive with openpilot engaged."
+msgstr "No hay registro de control. Active el registro de trazas y conduzca con openpilot activado."
+
 #: ../pythonpath/openpilot/selfdrive/ui/sunnypilot/layouts/settings/models.py:59
 #, python-format
 msgid "Vision Model"

@@ -5,6 +5,7 @@ This file is part of sunnypilot and is licensed under the MIT License.
 See the LICENSE.md file in the root directory for more details.
 """
 import datetime
+import html
 import os
 from pathlib import Path
 
@@ -20,6 +21,7 @@ from openpilot.system.ui.widgets.list_view import button_item
 
 from openpilot.system.ui.sunnypilot.widgets.html_render import HtmlModalSP
 from openpilot.system.ui.sunnypilot.widgets.list_view import toggle_item_sp
+from bluepilot.logger.control_ui_trace import clear_control_trace_log, control_trace_log_path, read_control_trace_log
 
 PREBUILT_PATH = os.path.join(Paths.comma_home(), "prebuilt") if PC else "/data/openpilot/prebuilt"
 
@@ -50,9 +52,30 @@ class DeveloperLayoutSP(DeveloperLayout):
 
     self.prebuilt_toggle = toggle_item_sp(tr("Quickboot Mode"), "", param="QuickBootToggle", callback=self._on_prebuilt_toggled)
 
+    self.control_trace_toggle = toggle_item_sp(
+      tr("Control Trace Log"),
+      tr("Record lateral and longitudinal control state transitions while driving."),
+      param="BPControlTraceEnabled",
+    )
+
+    self.control_log_btn = button_item(
+      tr("Control Log"),
+      tr("VIEW"),
+      tr("View the control trace log from recent onroad sessions."),
+      callback=self._on_control_log_clicked,
+    )
+
     self.error_log_btn = button_item(tr("Error Log"), tr("VIEW"), tr("View the error log for sunnypilot crashes."), callback=self._on_error_log_clicked)
 
-    self.items: list = [self.show_advanced_controls, self.enable_github_runner_toggle, self.enable_copyparty_toggle, self.prebuilt_toggle, self.error_log_btn,]
+    self.items: list = [
+      self.show_advanced_controls,
+      self.enable_github_runner_toggle,
+      self.enable_copyparty_toggle,
+      self.prebuilt_toggle,
+      self.control_trace_toggle,
+      self.control_log_btn,
+      self.error_log_btn,
+    ]
 
   @staticmethod
   def _on_prebuilt_toggled(state):
@@ -84,6 +107,35 @@ class DeveloperLayoutSP(DeveloperLayout):
     dialog = HtmlModalSP(text=text, callback=lambda result: self._on_error_log_closed(result, os.path.exists(self.error_log_path)))
     gui_app.push_widget(dialog)
 
+  def _control_log_has_content(self) -> bool:
+    return bool(read_control_trace_log().strip())
+
+  def _on_control_log_delete_confirm(self, result):
+    if result == DialogResult.CONFIRM:
+      clear_control_trace_log()
+
+  def _on_control_log_closed(self, result, log_exists):
+    if result == DialogResult.CONFIRM and log_exists:
+      dialog2 = ConfirmDialog(tr("Would you like to delete this log?"), tr("Yes"), tr("No"), rich=False,
+                               callback=self._on_control_log_delete_confirm)
+      gui_app.push_widget(dialog2)
+
+  def _on_control_log_clicked(self):
+    body = read_control_trace_log().strip()
+    text = ""
+    if body:
+      mtime_path = control_trace_log_path()
+      if os.path.exists(mtime_path):
+        text = f"<b>{datetime.datetime.fromtimestamp(os.path.getmtime(mtime_path)).strftime('%d-%b-%Y %H:%M:%S').upper()}</b><br><br>"
+      text += f'<pre style="white-space:pre-wrap;font-size:14px;">{html.escape(body)}</pre>'
+    else:
+      text = tr("No control trace log recorded. Enable Control Trace Log and drive with openpilot engaged.")
+    dialog = HtmlModalSP(
+      text=text,
+      callback=lambda result: self._on_control_log_closed(result, self._control_log_has_content()),
+    )
+    gui_app.push_widget(dialog)
+
   def _update_state(self):
     disable_updates = ui_state.params.get_bool("DisableUpdates")
     show_advanced = ui_state.params.get_bool("ShowAdvancedControls")
@@ -103,4 +155,6 @@ class DeveloperLayoutSP(DeveloperLayout):
 
     self.enable_copyparty_toggle.set_visible(show_advanced)
     self.enable_github_runner_toggle.set_visible(show_advanced and not self._is_release_branch)
+    self.control_trace_toggle.set_visible(not self._is_release_branch)
+    self.control_log_btn.set_visible(not self._is_release_branch)
     self.error_log_btn.set_visible(not self._is_release_branch)

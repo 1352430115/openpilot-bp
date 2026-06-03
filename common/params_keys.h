@@ -311,6 +311,7 @@ inline static std::unordered_map<std::string, ParamKeyAttributes> keys = {
     {"BPShowConfidenceBall", {PERSISTENT | BACKUP, BOOL, "1"}},
     {"BPAnimateSteeringWheel", {PERSISTENT | BACKUP, BOOL, "1"}},
     {"BPUIDebugLog", {PERSISTENT, BOOL, "0"}},
+    {"BPControlTraceEnabled", {PERSISTENT | BACKUP, BOOL, "0"}},
     {"Blindspot", {PERSISTENT | BACKUP, BOOL, "0"}},
     {"BlinkerPauseLaneChange", {PERSISTENT | BACKUP, BOOL, "0"}},
 
