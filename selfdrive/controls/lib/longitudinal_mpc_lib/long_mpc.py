@@ -54,7 +54,7 @@ T_IDXS = np.array(T_IDXS_LST)
 FCW_IDXS = T_IDXS < 5.0
 T_DIFFS = np.diff(T_IDXS, prepend=[0.])
 COMFORT_BRAKE = 2.5
-STOP_DISTANCE = 6.0  # legacy default; flat stop gap uses STOP_DISTANCE_FLAT
+STOP_DISTANCE = 4.0  # legacy default; flat stop gap uses STOP_DISTANCE_FLAT
 STOP_DISTANCE_FLAT = 4.0
 STANDSTILL_HEADWAY_SPEED = 0.3  # below this, use stop buffer only (no time-headway inflation)
 PITCH_SMOOTH_ALPHA_UP = 0.30
@@ -77,11 +77,11 @@ def get_jerk_factor(personality=log.LongitudinalPersonality.standard):
 
 def get_T_FOLLOW(personality=log.LongitudinalPersonality.standard):
   if personality==log.LongitudinalPersonality.relaxed:
-    return 1.75
+    return 2.35
   elif personality==log.LongitudinalPersonality.standard:
-    return 1.45
+    return 1.75
   elif personality==log.LongitudinalPersonality.aggressive:
-    return 1.25
+    return 0.75
   else:
     raise NotImplementedError("Longitudinal personality not supported")
 
@@ -153,9 +153,9 @@ class FordFollowBarsDisplay:
 
 def _personality_max_accel_vals(personality=log.LongitudinalPersonality.standard):
   if personality == log.LongitudinalPersonality.relaxed:
-    return [1.0, 0.85, 0.65, 0.50]
+    return [1.3, 0.65, 0.35, 0.25]
   if personality == log.LongitudinalPersonality.aggressive:
-    return [1.9, 1.45, 1.05, 0.75]
+    return [1.6, 0.4, 0.3, 0.2]
   return [1.6, 1.2, 0.8, 0.6]
 
 
@@ -182,7 +182,7 @@ def get_cruise_min_accel(personality=log.LongitudinalPersonality.standard):
 def get_accel_slew_rate(personality=log.LongitudinalPersonality.standard):
   if personality == log.LongitudinalPersonality.relaxed:
     return 0.03
-  if personality == log.LongitudinalPersonality.aggressive:
+  if personality == log.LongitudinalPersonality.:
     return 0.08
   return 0.05
 
@@ -190,7 +190,7 @@ def get_accel_slew_rate(personality=log.LongitudinalPersonality.standard):
 def get_start_accel(personality, base_start_accel: float) -> float:
   if personality == log.LongitudinalPersonality.relaxed:
     factor = 0.55
-  elif personality == log.LongitudinalPersonality.aggressive:
+  elif personality == log.LongitudinalPersonality.:
     factor = 1.25
   else:
     factor = 1.0
