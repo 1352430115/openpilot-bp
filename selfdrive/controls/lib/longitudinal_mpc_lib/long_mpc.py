@@ -182,7 +182,7 @@ def get_cruise_min_accel(personality=log.LongitudinalPersonality.standard):
 def get_accel_slew_rate(personality=log.LongitudinalPersonality.standard):
   if personality == log.LongitudinalPersonality.relaxed:
     return 0.03
-  if personality == log.LongitudinalPersonality.:
+  if personality == log.LongitudinalPersonality.aggressive:
     return 0.08
   return 0.05
 
@@ -190,7 +190,7 @@ def get_accel_slew_rate(personality=log.LongitudinalPersonality.standard):
 def get_start_accel(personality, base_start_accel: float) -> float:
   if personality == log.LongitudinalPersonality.relaxed:
     factor = 0.55
-  elif personality == log.LongitudinalPersonality.:
+  elif personality == log.LongitudinalPersonality.aggressive:
     factor = 1.25
   else:
     factor = 1.0
