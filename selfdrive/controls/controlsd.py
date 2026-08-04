@@ -172,6 +172,44 @@ class Controls(ControlsExt):
                                                        self.calibrated_pose, curvature_limited, lat_delay)
     actuators.torque = float(steer)
     actuators.steeringAngleDeg = float(steeringAngleDeg)
+    # ===================== HugDebug START（临时诊断，定位转弯贴线） =====================
+    try:
+      _mv2 = self.sm['modelV2']
+      _ll  = _mv2.laneLines
+      _probs = _mv2.laneLineProbs
+      def _y(idx, k):
+        try: return float(_ll[idx].y[k])
+        except Exception: return float('nan')
+      _k0 = 0
+      _k8 = min(8, len(_ll[0].y) - 1)          # 中前瞻点（约对应 X_IDXS[8]，避开近点退化）
+      _li0, _ri0 = _y(1, _k0), _y(2, _k0)      # 左内 / 右内 近点
+      _li8, _ri8 = _y(1, _k8), _y(2, _k8)      # 左内 / 右内 中前瞻
+      _pl, _pr   = float(_probs[1]), float(_probs[2])
+      _c0, _hw0  = (_li0 + _ri0) / 2.0, (_ri0 - _li0) / 2.0
+      _c8, _hw8  = (_li8 + _ri8) / 2.0, (_ri8 - _li8) / 2.0
+      _off0, _off8 = -_c0, -_c8                 # 车相对车道中心的偏移（车≈y=0）
+      _crossR0 = _ri0 < 0; _crossL0 = _li0 > 0  # 是否压过内线
+      _hug0 = (abs(_off0) > 0.6 * _hw0) if _hw0 > 0.1 else False
+      _lmp = self.sm.valid['lateralManeuverPlan']
+      _msg = (f"HugDebug|vEgo={CS.vEgo:.2f}|steerAct={CS.steeringAngleDeg:.2f}|"
+              f"curvAct={self.curvature:.5f}|"
+              f"desModel={model_v2.action.desiredCurvature:.5f}|"
+              f"desNew={new_desired_curvature:.5f}|desClip={self.desired_curvature:.5f}|"
+              f"limited={curvature_limited}|cmdAng={steeringAngleDeg:.2f}|"
+              f"roll={lp.roll:.4f}|angleOff={lp.angleOffsetDeg:.3f}|"
+              f"sr={lp.steerRatio:.3f}|stiff={lp.stiffnessFactor:.3f}|"
+              f"laneChg={model_v2.meta.laneChangeState}|lmp={_lmp}|"
+              f"pL={_pl:.2f}|pR={_pr:.2f}|"
+              f"li0={_li0:.2f}|ri0={_ri0:.2f}|c0={_c0:.2f}|hw0={_hw0:.2f}|off0={_off0:.2f}|"
+              f"crossR0={_crossR0}|crossL0={_crossL0}|hug0={_hug0}|"
+              f"li8={_li8:.2f}|ri8={_ri8:.2f}|c8={_c8:.2f}|hw8={_hw8:.2f}|off8={_off8:.2f}")
+      cloudlog.warning(_msg)
+      # 同时落盘，方便整段抓取（诊断完删掉本行及下面两行）
+      with open('/tmp/hug_debug.log', 'a') as _f:
+        _f.write(f"{CS.frame if hasattr(CS,'frame') else 0} {_msg}\n")
+    except Exception as _e:
+      cloudlog.warning(f"HugDebug|ERR {_e}")
+    # ===================== HugDebug END =====================
     # Ensure no NaNs/Infs
     for p in ACTUATOR_FIELDS:
       attr = getattr(actuators, p)
